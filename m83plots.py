@@ -12,16 +12,20 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 
 #load the file
-mytable=Table.read('/home/pafreema/Documents/m83.co10_props_cprops.fits')
-#note that matplotlib understands LaTeX math in the code below
+mytable=Table.read('/srv/astro/erosolo/m83/measurements/m83.co10_props_cprops.fits')
+#note that matplotlib understands LaTeX math in the code m
 
-m,b=np.polyfit(np.log(mytable['MASS_EXTRAP']),np.log(mytable['VIRMASS_EXTRAP_DECONV']),1)
+idx = np.where(np.isfinite(mytable['VIRMASS_EXTRAP_DECONV']))
+m,b=np.polyfit(np.log(mytable['MASS_EXTRAP'][idx]),np.log(mytable['VIRMASS_EXTRAP_DECONV'][idx]),1)
 figure=plt.figure(figsize=(4.5,4)) #figure size in inches
 plt.loglog(mytable['MASS_EXTRAP'],mytable['VIRMASS_EXTRAP_DECONV'],marker='s',linestyle='None')
-plt.plot(np.log(mytable['MASS_EXTRAP']),m*(np.log(mytable['VIRMASS_EXTRAP_DECONV']))+b,"-r")
+test_mass = np.logspace(5,8,100)
+plt.plot(test_mass,np.exp(m*np.log(test_mass)+b))
+plt.plot(test_mass,test_mass,alpha=0.5,linewidth=2)
 plt.xlabel(r'$M_{\mathrm{lum}}\ (M_{\odot})$')
 plt.ylabel(r'$M_{\mathrm{vir}}\ (M_{\odot})$')
 plt.tight_layout()
+import pdb; pdb.set_trace()
 plt.savefig('MlumMvir_matplotlib.png')
 
 figure=plt.figure(figsize=(4.5,4)) #figure size in inches
