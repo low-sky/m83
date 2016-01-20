@@ -25,7 +25,6 @@ plt.plot(test_mass,test_mass,alpha=0.5,linewidth=2)
 plt.xlabel(r'$M_{\mathrm{lum}}\ (M_{\odot})$')
 plt.ylabel(r'$M_{\mathrm{vir}}\ (M_{\odot})$')
 plt.tight_layout()
-import pdb; pdb.set_trace()
 plt.savefig('MlumMvir_matplotlib.png')
 
 figure=plt.figure(figsize=(4.5,4)) #figure size in inches
