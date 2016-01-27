@@ -6,11 +6,19 @@ import astropy.table
 import numpy as np
 from astropy.table import Table
 import matplotlib.pyplot as plt
+from galaxies import Galaxy
+import astropy.units as u
 
+mygalaxy=Galaxy("m83")
+print(mygalaxy)
 #load the file
 mytable=Table.read('/home/pafreema/Documents/m83.co10_props_cprops.fits')
 
 idx = np.where(np.isfinite(mytable['VIRMASS_EXTRAP_DECONV'])) #removes values that are infinite/NaN
+
+rgal=mygalaxy.radius(ra=mytable['XPOS'], dec=mytable['YPOS'])
+#print rgal.to(u.pc)
+
 sigma=(mytable['VRMS_EXTRAP_DECONV'][idx])/np.sqrt((mytable['RADRMS_EXTRAP_DECONV'][idx])**2) #sigma naught
 dens=(mytable['MASS_EXTRAP'][idx])/(np.pi*((mytable['RADRMS_EXTRAP_DECONV'][idx])**2)) #mass density
 rgal=np.sqrt((mytable['YRMS_EXTRAP_DECONV'][idx])**2+(mytable['XRMS_EXTRAP_DECONV'][idx])**2) #galactocentric radius?
