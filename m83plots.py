@@ -38,13 +38,13 @@ plt.ylabel(r'${\sigma}\  (km\ s^{-1})$')
 plt.tight_layout()
 plt.savefig('Rlinewidth_matplotlib.png')
 
-p,d=np.polyfit(np.log(mytable['MASS_EXTRAP'][idx]),np.log(mytable['RADRMS_EXTRAP_DECONV'][idx]),1)
+p,d=np.polyfit(np.log(mytable['RADRMS_EXTRAP_DECONV'][idx]),np.log(mytable['MASS_EXTRAP'][idx]),1)
 figure=plt.figure(figsize=(4.5,4)) #figure size in inches
-plt.loglog(mytable['MASS_EXTRAP'],mytable['RADRMS_EXTRAP_DECONV'],marker='s',linestyle='None')
-test_mr=np.logspace(5,8,100)
+plt.loglog(mytable['RADRMS_EXTRAP_DECONV'],mytable['MASS_EXTRAP'],marker='s',linestyle='None')
+test_mr=np.logspace(0,3,100)
 plt.plot(test_mr,np.exp(p*np.log(test_mr)+d)) #fit line for m83
-plt.plot(test_mr, ((1/np.sqrt(540))*test_mr**(1/2))) #fit line from Solomon et al. - using effective radius
-plt.xlabel(r'$M_{\mathrm{lum}}\ (M_{\odot})$')
-plt.ylabel(r'$R\ (pc)$')
+plt.plot(test_mr, (540*test_mr**(2))) #fit line from Solomon et al. - using effective radius
+plt.ylabel(r'$M_{\mathrm{lum}}\ (M_{\odot})$')
+plt.xlabel(r'$R\ (pc)$')
 plt.tight_layout()
-plt.savefig('MlumR_matplotlib.png')
+plt.savefig('MassRadius_matplotlib.png')
