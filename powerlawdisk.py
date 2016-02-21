@@ -23,23 +23,27 @@ colrgal=Column(name='RADIUS_PC',data=(rgal))
 t.add_column(colrgal)
 #print(t)
 
+#fit for the whole galaxy
+mass=t['MASS_EXTRAP'].data
+myfit=powerlaw.Fit(mass)
+
 idxdisk=np.where(t['RADIUS_PC']>1000)
-idxmass=np.where((t['MASS_EXTRAP']>2496477.5)&(t['RADIUS_PC']>1000))
+idxmass=np.where((t['MASS_EXTRAP']>myfit.xmin)&(t['RADIUS_PC']>1000))
 massdisk=t['MASS_EXTRAP'][idxdisk].data
 massdisk_subset=t['MASS_EXTRAP'][idxmass].data
-myfit=powerlaw.Fit(massdisk)
-myfit_subset=powerlaw.Fit(massdisk_subset, xmin=2496477.5)
+fit=powerlaw.Fit(massdisk)
+fit_subset=powerlaw.Fit(massdisk_subset, xmin=myfit.xmin)
 
 #myfit.plot_ccdf() #look at the data with the fit
-print(myfit.alpha) #returns the fitted index
-print(myfit_subset.alpha)
+print(fit.alpha) #returns the fitted index
+print(fit_subset.alpha)
 
-R,p=myfit_subset.distribution_compare('power_law', 'truncated_power_law')
+R,p=fit_subset.distribution_compare('power_law', 'truncated_power_law')
 print(R,p)
 
-myfit_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
-myfit_subset.power_law.plot_ccdf(label='Power Law')
-myfit_subset.plot_ccdf(drawstyle='steps', label='data')
+fit_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
+fit_subset.power_law.plot_ccdf(label='Power Law')
+fit_subset.plot_ccdf(drawstyle='steps', label='data')
 plt.xlabel(r'$Mass\ M_{\odot}$')
 plt.ylabel(r'$N\ (>M)$')
 plt.legend()

@@ -28,17 +28,21 @@ colrgal=Column(name='RADIUS_PC',data=(rgal))
 t.add_column(colrgal)
 #print(t)
 
+#fit for the whole galaxy
+mass=t['MASS_EXTRAP'].data
+myfit=powerlaw.Fit(mass)
+
 #plot bin 1
 
 #index the file so you get clouds within a certain radius
 idx_1=np.where(t['RADIUS_PC']<450)
-idxmass_1=np.where((t['MASS_EXTRAP']>2496477.5)&(t['RADIUS_PC']<450))
+idxmass_1=np.where((t['MASS_EXTRAP']>myfit.xmin)&(t['RADIUS_PC']<450))
 
 #pull out the mass variable and fit it
 massdisk1=t['MASS_EXTRAP'][idx_1].data
 fit_1=powerlaw.Fit(massdisk1)
 massdisk1_subset=t['MASS_EXTRAP'][idxmass_1].data
-fit_1_subset=powerlaw.Fit(massdisk1_subset, xmin=2496477.5)
+fit_1_subset=powerlaw.Fit(massdisk1_subset, xmin=myfit.xmin)
 
 
 
@@ -63,10 +67,10 @@ plt.savefig('powerlawbin1.png')
 #plot bin 2
 
 idx_2=np.where((t['RADIUS_PC']>450)&(t['RADIUS_PC']<2300))
-idxmass_2=np.where((t['MASS_EXTRAP']>2496477.5)&(t['RADIUS_PC']>450)&(t['RADIUS_PC']<2300))
+idxmass_2=np.where((t['MASS_EXTRAP']>myfit.xmin)&(t['RADIUS_PC']>450)&(t['RADIUS_PC']<2300))
 
 massdisk2_subset=t['MASS_EXTRAP'][idxmass_2].data
-fit_2_subset=powerlaw.Fit(massdisk2_subset, xmin=2496477.5)
+fit_2_subset=powerlaw.Fit(massdisk2_subset, xmin=myfit.xmin)
 massdisk2=t['MASS_EXTRAP'][idx_2].data
 fit_2=powerlaw.Fit(massdisk2)
 
@@ -116,10 +120,10 @@ plt.savefig('powerlawbin3.png')
 #plot bin 4
 
 idx_4=np.where((t['RADIUS_PC']>3200)&(t['RADIUS_PC']<3900))
-idxmass_4=np.where((t['MASS_EXTRAP']>2496477.5)&(t['RADIUS_PC']>3200)&(t['RADIUS_PC']<3900))
+idxmass_4=np.where((t['MASS_EXTRAP']>myfit.xmin)&(t['RADIUS_PC']>3200)&(t['RADIUS_PC']<3900))
 
 massdisk4_subset=t['MASS_EXTRAP'][idxmass_4].data
-fit_4_subset=powerlaw.Fit(massdisk4_subset, xmin=2496477.5)
+fit_4_subset=powerlaw.Fit(massdisk4_subset, xmin=myfit.xmin)
 
 massdisk4=t['MASS_EXTRAP'][idx_4].data
 fit_4=powerlaw.Fit(massdisk4)
@@ -143,10 +147,10 @@ plt.savefig('powerlawbin4.png')
 #plot bin 5
 
 idx_5=np.where((t['RADIUS_PC']>3900)&(t['RADIUS_PC']<4500))
-idxmass_5=np.where((t['MASS_EXTRAP']>2496477.5)&(t['RADIUS_PC']>3900)&(t['RADIUS_PC']<4500))
+idxmass_5=np.where((t['MASS_EXTRAP']>myfit.xmin)&(t['RADIUS_PC']>3900)&(t['RADIUS_PC']<4500))
 
 massdisk5_subset=t['MASS_EXTRAP'][idxmass_5].data
-fit_5_subset=powerlaw.Fit(massdisk5_subset, xmin=2496477.5)
+fit_5_subset=powerlaw.Fit(massdisk5_subset, xmin=myfit.xmin)
 
 massdisk5=t['MASS_EXTRAP'][idx_5].data
 fit_5=powerlaw.Fit(massdisk5)
