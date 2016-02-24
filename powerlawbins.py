@@ -61,7 +61,7 @@ fit_1_subset.power_law.plot_ccdf(label='Power Law')
 fit_1_subset.plot_ccdf(drawstyle='steps', label='data')
 plt.xlabel(r'$Mass\ M_{\odot}$')
 plt.ylabel(r'$N\ (>M)$')
-plt.legend()
+plt.legend(loc=3)
 plt.savefig('powerlawbin1.png')
 
 #plot bin 2
@@ -141,7 +141,7 @@ fit_4_subset.power_law.plot_ccdf(label='Power Law')
 fit_4_subset.plot_ccdf(drawstyle='steps', label='data')
 plt.xlabel(r'$Mass\ M_{\odot}$')
 plt.ylabel(r'$N\ (>M)$')
-plt.legend()
+plt.legend(loc=3)
 plt.savefig('powerlawbin4.png')
 
 #plot bin 5
@@ -168,9 +168,8 @@ fit_5_subset.power_law.plot_ccdf(label='Power Law')
 fit_5_subset.plot_ccdf(drawstyle='steps', label='data')
 plt.xlabel(r'$Mass\ M_{\odot}$')
 plt.ylabel(r'$N\ (>M)$')
-plt.legend()
+plt.legend(loc=3)
 plt.savefig('powerlawbin5.png')
-
 
 t=PrettyTable(["Bins", "R", "p", "index", "Adamo's index"])
 t.add_row(["0<r<4.5", -0.680348, 0.243417, -2.425428, "N/A"])
