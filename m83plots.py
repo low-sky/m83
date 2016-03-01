@@ -12,7 +12,7 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 
 #load the file
-mytable=Table.read('/srv/astro/erosolo/m83/measurements/m83.co10_props_cprops.fits')
+mytable=Table.read('/home/pafreema/Documents/m83.co10.K_props_cprops.fits')
 #note that matplotlib understands LaTeX math in the code m
 
 idx = np.where(np.isfinite(mytable['VIRMASS_EXTRAP_DECONV'])) #removes values that are infinite/NaN

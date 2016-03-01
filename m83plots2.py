@@ -12,12 +12,12 @@ import astropy.units as u
 mygalaxy=Galaxy("M83")
 print(mygalaxy)
 
-mytable=Table.read('/home/pafreema/Documents/m83.co10_props_cprops.fits')
+mytable=Table.read('/home/pafreema/Documents/m83.co10.K_props_cprops.fits')
 
 idx = np.where(np.isfinite(mytable['VIRMASS_EXTRAP_DECONV'])) #removes values that are infinite/NaN
 
 rgal=mygalaxy.radius(ra=(mytable['XPOS'][idx]), dec=(mytable['YPOS'][idx]))
-print rgal.to(u.pc) #get radii in parsecs
+print rgal #get radii in parsecs
 
 sigma=(mytable['VRMS_EXTRAP_DECONV'][idx])/np.sqrt((mytable['RADRMS_EXTRAP_DECONV'][idx])**2) #sigma naught
 dens=(mytable['MASS_EXTRAP'][idx])/(np.pi*((mytable['RADRMS_EXTRAP_DECONV'][idx])**2)) #mass density
