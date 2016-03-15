@@ -10,15 +10,13 @@ import matplotlib.pyplot as plt
 import powerlaw
 from galaxies import Galaxy
 import astropy.units as u
-from tabulate import tabulate
-from prettytable import PrettyTable
 
 #get info about m83
 mygalaxy=Galaxy("M83")
 print(mygalaxy)
 
 #load fits file
-t=Table.read('/home/pafreema/Documents/m83.co10.K_props_cprops.fits')
+t=Table.read('/Users/erik/m83.co10.K_props_cprops.fits')
 
 #find cloud's galactocentric distance
 rgal=mygalaxy.radius(ra=(t['XPOS']), dec=(t['YPOS']))
@@ -39,8 +37,9 @@ for inneredge, outeredge in zip(inneredge, outeredge):
     fit=powerlaw.Fit(mass)
     fit_subset=powerlaw.Fit(mass, xmin=3e5)
     R,p=fit_subset.distribution_compare('power_law', 'truncated_power_law')
+    R2,p2 = fit_subset.distribution_compare('power_law', 'schechter')
+    import pdb; pdb.set_trace()
     print(-fit.alpha, -fit_subset.alpha, R, p, 1/fit_subset.truncated_power_law.parameter2)   
-    
 
 #table=PrettyTable(["alpha", "subset alpha", "p", "index", "Truncation mass M_c"])
 #table.add_row([-fit.alpha, -fit_subset.alpha,R,p,1/myfit_subset.truncated_power_law.parameter2])
