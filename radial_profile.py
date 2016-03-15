@@ -15,7 +15,7 @@ def lundgren_surfdens(radius):
 
 def lundgren_vrot(radius):
     diskmass = 6e10*u.M_sun
-    diskradius = 2.7*u.kpc
+    diskradius = (2.7*u.kpc*4.8/4.5)
     y = (radius/diskradius).to(u.dimensionless_unscaled)
     y = y.value
     vc = (2*con.G*diskmass*y**2/(diskradius)*(kv(0,y)*iv(0,y)-kv(1,y)*iv(1,y)))**0.5
