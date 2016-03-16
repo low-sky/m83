@@ -50,7 +50,7 @@ for inneredge, outeredge in zip(inneredge, outeredge):
     table[-1]['p']=p
     table[-1]['Truncation mass (M$_\odot$)']=1/fit_subset.truncated_power_law.parameter2
     table[-1]['Largest cloud (M$_\odot$)']=mass.max()
-    table[-1]['5th largest cloud (M$_\odot$)']=t['MASS_EXTRAP'][idx][-1]
+    table[-1]['5th largest cloud (M$_\odot$)']=(np.sort(mass))[-5]
     print(table)
     #print(-fit.alpha, -fit_subset.alpha, R, p, 1/fit_subset.truncated_power_law.parameter2)
     
