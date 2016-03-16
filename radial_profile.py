@@ -11,7 +11,17 @@ import skimage.morphology as morph
 from astropy import wcs
 from scipy.stats import binned_statistic
 from radio_beam import Beam
+import scipy.interpolate as interp
 
+
+def channelShift(x,ChanShift):
+    # Shift a spectrum by a set number of channels.  
+    ftx = np.fft.fft(x)
+    m = np.fft.fftfreq(len(x))
+    phase = np.exp(2*np.pi*m*1j*ChanShift)
+    x2 = np.real(np.fft.ifft(ftx*phase))
+    return(x2)
+    
 def lundgren_surfdens(radius):
     # We assume that M83 is 4.8 Mpc away whereas Lundren et al. 2004
     # prefer 4.5 Mpc.  This changes radial scales but not surface
@@ -39,20 +49,64 @@ def alma_mask():
 def setprogress(axes):
     return(ProgressBar(np.prod(axes)))
 
+# for M83 V_helio + 10.919938 = V_LSRK
 
-def things_vrot(momentname = '/srv/astro/erosolo/m83/data/NGC_5236_RO_MOM1:I:HI:wbb2008.fits'):
+def ism_veldisp(momentname = '/srv/astro/erosolo/m83/data/m83.mom1.fits',
+                cubename = '/srv/astro/erosolo/m83/data/m83.co10.K_correct.fits',
+                dr = 0.25, nbins=100):
+    s = SpectralCube.read(cubename)
+    _, dec, ra = s.world[0,:,:]
+    mom1 = fits.getdata(momentname)
+    wcs_mom1 = wcs.WCS(momentname)
+    xvals, yvals = wcs_mom1.celestial.wcs_world2pix(ra,dec,0)
+    vvals = nd.interpolation.map_coordinates(mom1.squeeze(),[yvals.ravel(),xvals.ravel()],order=1)*u.m/u.s
+    intfunc = interp.interp1d(s.spectral_axis.value,np.arange(s.shape[0]),bounds_error = False)
+    channel = intfunc(vvals.to(u.km/u.s).value)
+    channel.shape = s.shape[1:]
+
+    m83 = Galaxy('M83')
+    radius = m83.radius(header=s.header)
+
+    inneredge, outeredge = np.linspace(0,6,nbins), np.linspace(0+dr,6+dr,nbins)
+    for ctr, edges in enumerate(zip(inneredge,outeredge)):
+        x0,x1 = edges
+        idx = (radius>=x0*u.kpc)*(radius<x1*u.kpc)
+        ymat, xmat = np.indices(s.shape[1:])
+        dchan = 50-channel[idx]
+        accumspec = np.zeros(s.shape[0])
+        for deltachan,yspec,xspec in zip(dchan,ymat[idx],xmat[idx]):
+            if np.isfinite(deltachan):
+                accumspec += channelShift(s[:,yspec,xspec],-deltachan)
+        import pdb; pdb.set_trace()
+    return vvals
+    
+def things_vrot(momentname = '/srv/astro/erosolo/m83/data/m83.mom1.fits',
+                dr = 0.25,nbins=100):
     m83 = Galaxy('M83')
     mom1 = fits.getdata(momentname).squeeze()
+    mom1 = nd.median_filter(mom1,size=1)
     hdr = fits.getheader(momentname) 
     x,y = m83.radius(header = hdr,returnXY=True)
     phi = np.arctan2(y.value,x.value)
     r = (x**2+y**2)**0.5
+    r = r.to(u.kpc).value
+    vrot = (mom1*u.km/u.s-m83.vsys)/(np.sin(m83.inclination)*np.cos(phi))
+    idx = np.abs(np.cos(phi))>0.25
+    inneredge, outeredge = np.linspace(0,6,nbins), np.linspace(0+dr,6+dr,nbins)
+    vprof = np.zeros(nbins)
+    radprof = np.zeros(nbins)
+    vscatter = np.zeros(nbins)
+    vrot = vrot.to(u.km/u.s).value
+    for ctr, edges in enumerate(zip(inneredge,outeredge)):
+        x0,x1 = edges
+        idx = (r>=x0)*(r<x1)
+        vprof[ctr] = np.nanmedian(vrot[idx])
+        vscatter[ctr] = np.nanmedian(np.abs(vrot[idx]-vprof[ctr]))*1.4826
+        radprof[ctr] = np.nanmean(r[idx])
+    return radprof,vprof,vscatter
     
-    vrot = (mom1/1e3*u.km/u.s-m83.vsys)/(np.sin(m83.inclination)*np.cos(phi))
-    idx = np.abs(np.cos(phi))>0.5
-    return(r[idx],vrot[idx])
-    
-def things_profile(momentname = '/srv/astro/erosolo/m83/data/NGC_5236_RO_MOM0:I:HI:wbb2008.fits'):
+def things_profile(momentname = '/srv/astro/erosolo/m83/data/NGC_5236_RO_MOM0:I:HI:wbb2008.fits',
+                   dr=0.5,nbins=100):
     m83 = Galaxy('M83')
     mom0 = fits.getdata(momentname).squeeze()
     hdr = fits.getheader(momentname) 
@@ -60,8 +114,6 @@ def things_profile(momentname = '/srv/astro/erosolo/m83/data/NGC_5236_RO_MOM0:I:
     bm = Beam.from_fits_header(hdr)
     nurest = hdr['RESTFREQ']*u.Hz
     radmat = radius.to(u.kpc).value
-    dr = 1.0
-    nbins=100
     inneredge, outeredge = np.linspace(0,6,nbins), np.linspace(0+dr,6+dr,nbins)
     sdprof = np.zeros(nbins)
     radprof = np.zeros(nbins)
@@ -74,13 +126,12 @@ def things_profile(momentname = '/srv/astro/erosolo/m83/data/NGC_5236_RO_MOM0:I:
     sdprof *= np.cos(m83.inclination)*1e-3*bm.jtok(nurest)*0.019
     return radprof,sdprof
         
-def alma_profile(momentname = 'm83.moment0.fits'):
+def alma_profile(momentname = 'm83.moment0.fits',
+                 dr=0.5,nbins=100):
     m83 = Galaxy('M83')
     mom0 = fits.getdata(momentname)
     radius = m83.radius(header = fits.getheader(momentname))
     radmat = radius.to(u.kpc).value
-    dr = 1.0
-    nbins=100
     inneredge, outeredge = np.linspace(0,6,nbins), np.linspace(0+dr,6+dr,nbins)
     sdprof = np.zeros(nbins)
     radprof = np.zeros(nbins)

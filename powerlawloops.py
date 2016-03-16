@@ -30,6 +30,10 @@ t.add_column(colrgal)
 inneredge=np.array([0, 450, 2300, 3200, 3900])
 outeredge=np.array([450, 2300, 3200, 3900, 4500])
 
+column_names=['Inner edge (pc)', 'Outer edge (pc)', 'GMC index', 'R', 'p', 'Truncation mass (M$_\odot$)', 'Largest cloud (M$_\odot$)', '5th largest cloud (M$_\odot$)']
+column_types=['f4', 'f4', 'f4', 'f4', 'f4', 'f4', 'f4', 'f4']
+table=Table(names=column_names, dtype=column_types)
+
 for inneredge, outeredge in zip(inneredge, outeredge):
     idx=np.where((t['RADIUS_PC']>=inneredge)&(t['RADIUS_PC']<outeredge))
     mass=t['MASS_EXTRAP'][idx].data
@@ -37,15 +41,17 @@ for inneredge, outeredge in zip(inneredge, outeredge):
     fit=powerlaw.Fit(mass)
     fit_subset=powerlaw.Fit(mass, xmin=3e5)
     R,p=fit_subset.distribution_compare('power_law', 'truncated_power_law')
-    R2,p2 = fit_subset.distribution_compare('power_law', 'schechter')
-    import pdb; pdb.set_trace()
-    print(-fit.alpha, -fit_subset.alpha, R, p, 1/fit_subset.truncated_power_law.parameter2)   
-
-#table=PrettyTable(["alpha", "subset alpha", "p", "index", "Truncation mass M_c"])
-#table.add_row([-fit.alpha, -fit_subset.alpha,R,p,1/myfit_subset.truncated_power_law.parameter2])
+    t['MASS_EXTRAP'][idx].sort()
+    table.add_row()
+    table[-1]['Inner edge (pc)']=inneredge
+    table[-1]['Outer edge (pc)']=outeredge
+    table[-1]['GMC index']=-fit_subset.alpha
+    table[-1]['R']=R
+    table[-1]['p']=p
+    table[-1]['Truncation mass (M$_\odot$)']=1/fit_subset.truncated_power_law.parameter2
+    table[-1]['Largest cloud (M$_\odot$)']=mass.max()
+    table[-1]['5th largest cloud (M$_\odot$)']=t['MASS_EXTRAP'][idx][-1]
+    print(table)
+    #print(-fit.alpha, -fit_subset.alpha, R, p, 1/fit_subset.truncated_power_law.parameter2)
     
-#data=table.get_string()
-#with open('powerlawloopbininfo.txt', 'wb') as f:
- #   f.write(data)
-        
-    
+table.write('m83bininfo.fits', overwrite=True)
