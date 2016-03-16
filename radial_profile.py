@@ -71,48 +71,48 @@ def ism_hidisp(momentname = '/srv/astro/erosolo/m83/data/NGC_5236_RO_MOM1:I:HI:w
         x0,x1 = edges
         idx = (radius>=x0*u.kpc)*(radius<x1*u.kpc)
         ymat, xmat = np.indices(s.shape[1:])
-        dchan = channel[idx]-50
+        dchan = channel[idx]-s.shape[0]/2
         accumspec = np.zeros(s.shape[0])
+
         for deltachan,yspec,xspec in zip(dchan,ymat[idx],xmat[idx]):
             if np.isfinite(deltachan):
                 accumspec += channelShift(s[:,yspec,xspec],deltachan)
-        
+        import pdb; pdb.set_trace()
         labels,_ = nd.measurements.label(accumspec>0)
         pk = np.argmax(accumspec)
         roi = (labels == labels[pk])
         v0 = np.sum(accumspec[roi]*vaxis[roi])/np.sum(accumspec[roi])
         sigma[ctr] = (np.sum(accumspec[roi]*(vaxis[roi]-v0)**2)/np.sum(accumspec[roi]))**0.5
-        import pdb; pdb.set_trace()
     return sigma
 
     
 def ism_veldisp(momentname = '/srv/astro/erosolo/m83/data/m83.mom1.fits',
                 cubename = '/srv/astro/erosolo/m83/data/m83.co10.K_correct.fits',
                 dr = 0.25, nbins=100):
-    s = SpectralCube.read(cubename)
-    _, dec, ra = s.world[0,:,:]
+    sc = SpectralCube.read(cubename)
+    _, dec, ra = scworld[0,:,:]
     mom1 = fits.getdata(momentname)
 #    mom1 = nd.generic_filter(mom1,np.nanmedian,size=1)
     wcs_mom1 = wcs.WCS(momentname)
     xvals, yvals = wcs_mom1.celestial.wcs_world2pix(ra,dec,0)
     vvals = nd.interpolation.map_coordinates(mom1.squeeze(),[yvals.ravel(),xvals.ravel()],order=1)*u.m/u.s
-    intfunc = interp.interp1d(s.spectral_axis.value,np.arange(s.shape[0]),bounds_error = False)
+    intfunc = interp.interp1d(sc.spectral_axis.value,np.arange(scshape[0]),bounds_error = False)
     channel = intfunc(vvals.to(u.km/u.s).value-10.919938)
-    channel.shape = s.shape[1:]
+    channel.shape = sc.shape[1:]
     m83 = Galaxy('M83')
-    radius = m83.radius(header=s.header)
+    radius = m83.radius(header=sc.header)
     inneredge, outeredge = np.linspace(0,6,nbins), np.linspace(0+dr,6+dr,nbins)
-    vaxis = s.spectral_axis.to(u.km/u.s).value
+    vaxis = sc.spectral_axis.to(u.km/u.s).value
     sigma = np.zeros(nbins)
     for ctr, edges in enumerate(zip(inneredge,outeredge)):
         x0,x1 = edges
         idx = (radius>=x0*u.kpc)*(radius<x1*u.kpc)
-        ymat, xmat = np.indices(s.shape[1:])
+        ymat, xmat = np.indices(sc.shape[1:])
         dchan = channel[idx]-50
-        accumspec = np.zeros(s.shape[0])
+        accumspec = np.zeros(sc.shape[0])
         for deltachan,yspec,xspec in zip(dchan,ymat[idx],xmat[idx]):
             if np.isfinite(deltachan):
-                accumspec += channelShift(s[:,yspec,xspec],deltachan)
+                accumspec += channelShift(sc[:,yspec,xspec],deltachan)
         
         labels,_ = nd.measurements.label(accumspec>0)
         pk = np.argmax(accumspec)
