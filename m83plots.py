@@ -32,7 +32,7 @@ plt.plot(test_mass,np.exp(m*np.log(test_mass)+b)) #fit line for m83
 plt.plot(test_mass,test_mass,alpha=0.5,linewidth=2) #fitted x=y
 plt.xlabel(r'$M_{\mathrm{lum}}\ (M_{\odot})$')
 plt.ylabel(r'$M_{\mathrm{vir}}\ (M_{\odot})$')
-plt.axis([10e4, 10e7, 10e3, 10e8])
+plt.axis([10e4, 10e7, 10e3, 10e7])
 plt.colorbar(label='$R_{gal}\ (pc)$')
 plt.xscale('log')
 plt.yscale('log')
@@ -47,7 +47,7 @@ plt.plot(test_radius, np.exp(n*np.log(test_radius)+c)) #fit line for m83
 plt.plot(test_radius, ((np.pi**0.5/3.4)**0.5)*(test_radius**0.5)) #fit line from Solomon et al.- using effective radius
 plt.xlabel(r'$R\ (pc)$')
 plt.ylabel(r'${\sigma}\  (km\ s^{-1})$')
-plt.axis([1,10e2, 10e-2, 10e1])
+plt.axis([6,2*10e1, 3*10e-2, 5*10e0])
 plt.colorbar(label='$R_{gal}\ (pc)$')
 plt.xscale('log')
 plt.yscale('log')
@@ -62,7 +62,7 @@ plt.plot(test_mr,np.exp(p*np.log(test_mr)+d)) #fit line for m83
 plt.plot(test_mr, (540*test_mr**(2))) #fit line from Solomon et al. - using effective radius
 plt.ylabel(r'$M_{\mathrm{lum}}\ (M_{\odot})$')
 plt.xlabel(r'$R\ (pc)$')
-plt.axis([1, 10e2, 10e4, 10e7])
+plt.axis([6, 2*10e1, 10e4, 10e7])
 plt.colorbar(label='$R_{gal}\ (pc)$')
 plt.xscale('log')
 plt.yscale('log')
