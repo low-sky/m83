@@ -18,7 +18,7 @@ mygalaxy=Galaxy("M83")
 print(mygalaxy)
 
 #load fits file
-t=Table.read('/home/pafreema/Documents/m83.co10.K_props_cprops.fits')
+t=Table.read('/srv/astro/erosolo/m83/measurements/m83.co10.K_props_cprops.fits')
 
 #find cloud's galactocentric distance
 rgal=mygalaxy.radius(ra=(t['XPOS']), dec=(t['YPOS']))
@@ -54,12 +54,13 @@ fit_1_subset=powerlaw.Fit(massdisk1_subset, xmin=3e5)
 R1,p1=fit_1_subset.distribution_compare('power_law', 'truncated_power_law')
 
 fig=plt.figure(figsize=(7.5,5))
-ax1=fig.add_subplot(231, xlabel=r'Mass $M_{\odot}$', ylabel=r'$N\ (<M)$')
+ax1=fig.add_subplot(231, ylabel=r'$N\ (<M)$')
 fit_1_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
 fit_1_subset.power_law.plot_ccdf(label='Power Law')
 fit_1_subset.plot_ccdf(drawstyle='steps', label='Data')
 plt.axis([10e4, 10e7, 10e-4, 10e-1])
 plt.text(2*10e4, 2*10e-4, '(a)')
+plt.setp(ax1.get_xticklabels(), visible=False)
 #plt.legend(loc=3)
 #plt.savefig('powerlawbin1.png')
 
@@ -75,13 +76,14 @@ fit_2=powerlaw.Fit(massdisk2)
 
 R2,p2=fit_2_subset.distribution_compare('power_law', 'truncated_power_law')
 
-ax2=fig.add_subplot(232, sharex=ax1, sharey=ax1, xlabel=r'Mass $M_{\odot}$', ylabel=r'$N\ (<M)$')
+ax2=fig.add_subplot(232, sharex=ax1, sharey=ax1, ylabel=r'$N\ (<M)$')
 fit_2_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
 fit_2_subset.power_law.plot_ccdf(label='Power Law')
 fit_2_subset.plot_ccdf(drawstyle='steps', label='Data')
 plt.axis([10e4, 10e7, 10e-4, 10e-1])
 plt.text(2*10e4, 2*10e-4, '(b)')
 #plt.savefig('powerlawbin2.png')
+plt.setp(ax2.get_xticklabels(), visible=False)
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 
 #plot bin 3
@@ -149,7 +151,7 @@ plt.axis([10e4, 10e7, 10e-4, 10e-1])
 plt.text(2*10e4, 2*10e-4, '(e)')
 #plt.savefig('powerlawbin5.png')
 plt.tight_layout()
-plt.savefig('powerlawsubplots.png')
+plt.savefig('powerlawsubplots.pdf')
 
 t=PrettyTable(["Bins", "R", "p", "index", "Truncation mass M_c", "Adamo's index"])
 t.add_row(["0<r<4.5",R,p,-myfit_subset.alpha,1/myfit_subset.truncated_power_law.parameter2 , "N/A"])
