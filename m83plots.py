@@ -37,7 +37,7 @@ plt.colorbar(label='$R_{gal}\ (pc)$')
 plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
-plt.savefig('MlumMvir_matplotlib.png')
+plt.savefig('MlumMvir_matplotlib.pdf')
 
 n,c=np.polyfit(np.log(mytable['RADRMS_EXTRAP_DECONV'][idx]),np.log(mytable['VRMS_EXTRAP_DECONV'][idx]),1)
 figure=plt.figure(figsize=(4.5,4)) #figure size in inches
@@ -52,7 +52,7 @@ plt.colorbar(label='$R_{gal}\ (pc)$')
 plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
-plt.savefig('Rlinewidth_matplotlib.png')
+plt.savefig('Rlinewidth_matplotlib.pdf')
 
 p,d=np.polyfit(np.log(mytable['RADRMS_EXTRAP_DECONV'][idx]),np.log(mytable['MASS_EXTRAP'][idx]),1)
 figure=plt.figure(figsize=(4.5,4)) #figure size in inches
@@ -67,4 +67,4 @@ plt.colorbar(label='$R_{gal}\ (pc)$')
 plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
-plt.savefig('MassRadius_matplotlib.png')
+plt.savefig('MassRadius_matplotlib.pdf')

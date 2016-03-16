@@ -54,12 +54,22 @@ fit_1_subset=powerlaw.Fit(massdisk1_subset, xmin=3e5)
 R1,p1=fit_1_subset.distribution_compare('power_law', 'truncated_power_law')
 
 fig=plt.figure(figsize=(7.5,5))
-ax1=fig.add_subplot(231, xlabel=r'Mass $M_{\odot}$', ylabel=r'$N\ (<M)$')
+ax=fig.add_subplot(111)
+ax.spines['top'].set_color('none')
+ax.spines['bottom'].set_color('none')
+ax.spines['left'].set_color('none')
+ax.spines['right'].set_color('none')
+ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+ax.set_ylabel('$N\ (>M)$')
+ax.set_xlabel('Mass $(M_{\odot})$')
+
+ax1=fig.add_subplot(231)
 fit_1_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
 fit_1_subset.power_law.plot_ccdf(label='Power Law')
 fit_1_subset.plot_ccdf(drawstyle='steps', label='Data')
 plt.axis([10e4, 10e7, 10e-4, 10e-1])
 plt.text(2*10e4, 2*10e-4, '(a)')
+plt.setp(ax1.get_xticklabels(), visible=False)
 #plt.legend(loc=3)
 #plt.savefig('powerlawbin1.png')
 
@@ -75,14 +85,16 @@ fit_2=powerlaw.Fit(massdisk2)
 
 R2,p2=fit_2_subset.distribution_compare('power_law', 'truncated_power_law')
 
-ax2=fig.add_subplot(232, sharex=ax1, sharey=ax1, xlabel=r'Mass $M_{\odot}$', ylabel=r'$N\ (<M)$')
+ax2=fig.add_subplot(232, sharex=ax1, sharey=ax1)
 fit_2_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
 fit_2_subset.power_law.plot_ccdf(label='Power Law')
 fit_2_subset.plot_ccdf(drawstyle='steps', label='Data')
 plt.axis([10e4, 10e7, 10e-4, 10e-1])
 plt.text(2*10e4, 2*10e-4, '(b)')
+plt.setp(ax2.get_xticklabels(), visible=False)
+plt.setp(ax2.get_yticklabels(), visible=False)
 #plt.savefig('powerlawbin2.png')
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+plt.legend(bbox_to_anchor=(1.05, 0.75), loc=2, borderaxespad=0.)
 
 #plot bin 3
 
@@ -98,7 +110,7 @@ fit_3=powerlaw.Fit(massdisk3)
 
 R3,p3=fit_3_subset.distribution_compare('power_law', 'truncated_power_law')
 
-ax3=fig.add_subplot(234, sharex=ax1, sharey=ax1, xlabel=r'Mass $M_{\odot}$', ylabel=r'$N\ (<M)$')
+ax3=fig.add_subplot(234, sharex=ax1, sharey=ax1)
 fit_3_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
 fit_3_subset.power_law.plot_ccdf(label='Power Law')
 fit_3_subset.plot_ccdf(drawstyle='steps', label='Data')
@@ -120,12 +132,13 @@ fit_4=powerlaw.Fit(massdisk4)
 
 R4,p4=fit_4_subset.distribution_compare('power_law', 'truncated_power_law')
 
-ax4=fig.add_subplot(235, sharex=ax1, sharey=ax1, xlabel=r'Mass $M_{\odot}$', ylabel=r'$N\ (<M)$')
+ax4=fig.add_subplot(235, sharex=ax1, sharey=ax1)
 fit_4_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
 fit_4_subset.power_law.plot_ccdf(label='Power Law')
 fit_4_subset.plot_ccdf(drawstyle='steps', label='Data')
 plt.axis([10e4, 10e7, 10e-4, 10e-1])
 plt.text(2*10e4, 2*10e-4, '(d)')
+plt.setp(ax4.get_yticklabels(), visible=False)
 #plt.savefig('powerlawbin4.png')
 
 #plot bin 5
@@ -141,15 +154,16 @@ fit_5=powerlaw.Fit(massdisk5)
 
 R5,p5=fit_5_subset.distribution_compare('power_law', 'truncated_power_law')
 
-ax5=fig.add_subplot(236, sharex=ax1, sharey=ax1, xlabel=r'Mass $M_{\odot}$', ylabel=r'$N\ (<M)$')
+ax5=fig.add_subplot(236, sharex=ax1, sharey=ax1)
 fit_5_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
 fit_5_subset.power_law.plot_ccdf(label='Power Law')
 fit_5_subset.plot_ccdf(drawstyle='steps', label='Data')
 plt.axis([10e4, 10e7, 10e-4, 10e-1])
 plt.text(2*10e4, 2*10e-4, '(e)')
+plt.setp(ax5.get_yticklabels(), visible=False)
 #plt.savefig('powerlawbin5.png')
 plt.tight_layout()
-plt.savefig('powerlawsubplots.png')
+plt.savefig('powerlawsubplots.pdf')
 
 t=PrettyTable(["Bins", "R", "p", "index", "Truncation mass M_c", "Adamo's index"])
 t.add_row(["0<r<4.5",R,p,-myfit_subset.alpha,1/myfit_subset.truncated_power_law.parameter2 , "N/A"])
