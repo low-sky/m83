@@ -350,7 +350,7 @@ def profile_plots():
     plt.semilogy(rad, t['Surfdens_H2'].data,label=r'H$_2$',linestyle=':')
     plt.plot(rad, t['Surfdens_HI'].data,label=r'HI',linestyle='--')
     plt.plot(rad, t['Surfdens_H2'].data+t['Surfdens_HI'].data,label='Total',linestyle='-')
-    plt.plot(rad, lundgren_surfdens(rad*u.kpc).value,label = 'L04')
+    plt.plot(rad, lundgren_surfdens(rad*u.kpc).value,label = 'L04',alpha=0.7,lw=4)
     plt.setp(ax0.get_xticklabels(), visible=False)
     plt.legend(loc=1,fontsize=9)
     plt.ylabel(r'$\Sigma\ (M_{\odot}\ \mathrm{pc}^{-2})$')
