@@ -338,7 +338,7 @@ def profile_plots():
     plt.plot(rad,vrot,label='THINGS')
     plt.plot(rad,(lundgren_vrot(rad*u.kpc).to(u.km/u.s)).value,
              label='Lundgren et al. (2004)',linestyle='--')
-    plt.fill_between(rad,vrot+t['V_scatter'].data/2,vrot-t['V_scatter']/2,color='grey')
+    plt.fill_between(rad,vrot+t['V_scatter'].data/2,vrot-t['V_scatter']/2,color='0.75')
     plt.legend(loc=4,fontsize=10)
     plt.ylabel(r'V (km s$^{-1}$)')
     plt.setp(ax1.get_xticklabels(), visible=False)
