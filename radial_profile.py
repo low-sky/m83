@@ -13,6 +13,12 @@ from scipy.stats import binned_statistic
 from radio_beam import Beam
 import scipy.interpolate as interp
 from astropy.table import Table, Column
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+mpl.rcParams['font.family']='serif'
+
+from scipy.signal import savgol_filter
+
 
 def channelShift(x,ChanShift):
     # Shift a spectrum by a set number of channels.  
@@ -36,7 +42,7 @@ def lundgren_surfdens(radius):
 def lundgren_vrot(radius):
     diskmass = 6e10*u.M_sun*(4.8/4.5)
     diskradius = (2.7*u.kpc*4.8/4.5)
-    y = (radius/diskradius).to(u.dimensionless_unscaled)
+    y = (0.5*radius/diskradius).to(u.dimensionless_unscaled)
     y = y.value
     vc = (2*con.G*diskmass*y**2/(diskradius)*
           (kv(0,y)*iv(0,y)-kv(1,y)*iv(1,y)))**0.5
@@ -53,9 +59,14 @@ def critical_masses():
     t = Table.read('m83.profiles.fits')
     sd = t['Surfdens_HI'].data*t['Surfdens_HI'].unit+\
          t['Surfdens_H2'].data*t['Surfdens_H2'].unit
-    veldisp = t['sigma_v_hi'].data*t['sigma_v_hi'].unit
-    idx = t['sigma_v_h2']>t['sigma_v_hi'] 
-    veldisp[idx] = t['sigma_v_h2'][idx].data*t['sigma_v_h2'][idx].unit
+
+    veldisp = ((t['sigma_v_hi'].data*t['sigma_v_hi'].unit)**2+\
+              (t['sigma_v_h2'].data*t['sigma_v_h2'].unit)**2)**0.5
+
+
+#    veldisp = t['sigma_v_hi'].data*t['sigma_v_hi'].unit
+#    idx = t['sigma_v_h2']>t['sigma_v_hi'] 
+#    veldisp[idx] = t['sigma_v_h2'][idx].data*t['sigma_v_h2'][idx].unit
     t['sigma_v_h2'].data*t['sigma_v_h2'].unit
     vrot = t['Vrot'].data*t['Vrot'].unit
     radius = t['Radius'].data*t['Radius'].unit
@@ -309,4 +320,41 @@ def alma_errormap(cube = '/home/erosolow/fastdata/m83/data/m83.co10.K_correct.fi
     hdu.writeto('m83.errormap.fits',clobber=True)
 
 def profile_plots():
+    import matplotlib.pyplot as plt
+
+    t = Table.read('m83.profiles.fits')
+
+    sd = t['Surfdens_HI'].data*t['Surfdens_HI'].unit+\
+         t['Surfdens_H2'].data*t['Surfdens_H2'].unit
+    veldisp = ((t['sigma_v_hi'].data*t['sigma_v_hi'].unit)**2+\
+              (t['sigma_v_h2'].data*t['sigma_v_h2'].unit)**2)**0.5
+
+    rad = t['Radius'].data
+    vrot = t['Vrot'].data
+    plt.clf()
+
+    plt.figure(figsize=(5,4))
+    ax1 = plt.subplot(211)
+    plt.plot(rad,vrot,label='THINGS')
+    plt.plot(rad,(lundgren_vrot(rad*u.kpc).to(u.km/u.s)).value,
+             label='Lundgren et al. (2004)',linestyle='--')
+    plt.fill_between(rad,vrot+t['V_scatter'].data/2,vrot-t['V_scatter']/2,color='grey')
+    plt.legend(loc=4,fontsize=10)
+    plt.ylabel(r'V (km s$^{-1}$)')
+    plt.setp(ax1.get_xticklabels(), visible=False)
+    
+    ax2 = plt.subplot(212,sharex=ax1)
+    plt.plot(rad,savgol_filter(veldisp.value,11,3,mode='nearest'))
+    plt.ylim([0,40])
+    plt.xlabel(r'R (kpc)')
+    plt.ylabel(r'$\sigma_v$ (km s$^{-1}$)')
+    plt.tight_layout()
+    plt.savefig('profiles1.pdf')
+
+
+
+
+
+
+
     pass
