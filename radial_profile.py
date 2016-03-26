@@ -12,7 +12,7 @@ from astropy import wcs
 from scipy.stats import binned_statistic
 from radio_beam import Beam
 import scipy.interpolate as interp
-
+from astropy.table import Table, Column
 
 def channelShift(x,ChanShift):
     # Shift a spectrum by a set number of channels.  
@@ -49,54 +49,123 @@ def alma_mask():
 def setprogress(axes):
     return(ProgressBar(np.prod(axes)))
 
+def critical_masses():
+    t = Table.read('m83.profiles.fits')
+    sd = t['Surfdens_HI'].data*t['Surfdens_HI'].unit+\
+         t['Surfdens_H2'].data*t['Surfdens_H2'].unit
+    veldisp = t['sigma_v_hi'].data*t['sigma_v_hi'].unit
+    idx = t['sigma_v_h2']>t['sigma_v_hi'] 
+    veldisp[idx] = t['sigma_v_h2'][idx].data*t['sigma_v_h2'][idx].unit
+    t['sigma_v_h2'].data*t['sigma_v_h2'].unit
+    vrot = t['Vrot'].data*t['Vrot'].unit
+    radius = t['Radius'].data*t['Radius'].unit
+
+    Mjeans = (veldisp**4/(np.pi*con.G**2*sd)).to(u.M_sun)
+    Ltoomre = (np.pi*con.G*sd/(vrot/radius)**2).to(u.pc)
+    Mtoomre = (sd*np.pi*Ltoomre**2).to(u.M_sun)
+
+    r4d =np.insert(radius,0,0*u.kpc)
+    
+    v4d = np.insert(vrot,0,0*u.km/u.s)
+    grad = np.gradient(v4d*r4d)
+    grad = grad[1:]
+    import pdb; pdb.set_trace()
+    kappa = (2*vrot/radius**2*grad/
+             (radius[1]-radius[0]))**0.5
+    Ltoomre_full = 4*np.pi**2*con.G*sd/kappa**2
+    Mtoomre_full = (sd*np.pi*Ltoomre_full**2).to(u.M_sun)
+
+    inneredge = np.array([0,0.45,2.3,3.2,3.9])*u.kpc
+    outeredge = np.array([0.45,2.3,3.2,3.9,4.5])*u.kpc
+
+    for (xin,xout) in zip(inneredge,outeredge):
+        idx = (radius >= xin)*(radius<xout)
+        mj = np.mean(Mjeans[idx])
+        mt = np.mean(Mtoomre[idx])
+        mtf = np.mean(Mtoomre_full[idx])
+        print "{0:3.1f} & {1:3.1f} & {2:3.1f} \\".format(mj.value/1e6,mt.value/1e6,mtf.value/1e6)
+
+    import pdb; pdb.set_trace()
+
+
+def allthethings():
+    radius_co, surfdens_co = alma_profile()
+    radius_hi, surfdens_hi = things_profile()
+    radius_rc, vrot, vscatter = things_vrot()
+    veldmol = ism_veldisp()
+    c0 = Column(radius_co*u.kpc,name='Radius')
+    c1 = Column(surfdens_co*u.M_sun/u.pc**2,name='Surfdens_H2')
+    c2 = Column(surfdens_hi*u.M_sun/u.pc**2,name='Surfdens_HI')
+    c3 = Column(vrot*u.km/u.s,name='Vrot')
+    c4 = Column(vscatter*u.km/u.s,name='V_scatter')
+    c5 = Column(veldmol*u.km/u.s,name='sigma_v_hi')
+    t = Table()
+    for c in [c0,c1,c2,c3,c4,c5]:
+        t.add_column(c)
+    t.write('m83.profiles.fits',overwrite=True)
+
+    veldism = ism_hidisp()
+    c6 = Column(veldism*u.km/u.s,name='sigma_v_h2')
+    for c in [c6]:
+        t.add_column(c)
+    t.write('m83.profiles.fits',overwrite=True)
+
+
+
+
+    import pdb; pdb.set_trace()
+
 # for M83 V_helio - 10.919938 = V_LSRK
-def cloud_veldisp(catalog ='/home/erosolow/bigdata/erosolo/m83/measurements/m83.co10_props_cprops.fits'):
+def cloud_veldisp(catalog ='/home/erosolow/fastdata/m83/measurements/m83.co10_props_cprops.fits'):
     m83 = Galaxy('M83')
     radius = Galaxy.radius(ra=t['RA'],dec=t['DEC'])
 
-def ism_hidisp(momentname = '/home/erosolow/bigdata/erosolo/m83/data/NGC_5236_RO_MOM1:I:HI:wbb2008.fits',
-               cubename = '/home/erosolow/bigdata/erosolo/m83/data/NGC_5236_RO_CUBE:I:HI:wbb2008.fits.gz',
+def ism_hidisp(momentname = '/home/erosolow/fastdata/m83/data/NGC_5236_RO_MOM1:I:HI:wbb2008.fits',
+               cubename = '/home/erosolow/fastdata/m83/data/NGC_5236_RO_CUBE:I:HI:wbb2008.fits.gz',
                dr = 0.25, nbins=100):
-    s = SpectralCube.read(cubename)
+    sc = SpectralCube.read(cubename,allow_huge_operations=True,
+                           mode='readonly',memmap=False)
+    sc = sc[4:-4,:,:]
     mom1 = fits.getdata(momentname)
     m83 = Galaxy('M83')
-    radius = m83.radius(header=s.header)
-    intfunc = interp.interp1d(s.spectral_axis.value,np.arange(s.shape[0]),bounds_error = False)
+    radius = m83.radius(header=sc.header)
+    intfunc = interp.interp1d(sc.spectral_axis.value,np.arange(sc.shape[0]),bounds_error = False)
     channel = intfunc(mom1.squeeze().ravel())
-    channel.shape = s.shape[1:]
+    channel.shape = sc.shape[1:]
     inneredge, outeredge = np.linspace(0,6,nbins), np.linspace(0+dr,6+dr,nbins)
-    vaxis = s.spectral_axis.to(u.km/u.s).value
+    vaxis = sc.spectral_axis.to(u.km/u.s).value
     sigma = np.zeros(nbins)
     for ctr, edges in enumerate(zip(inneredge,outeredge)):
         x0,x1 = edges
         idx = (radius>=x0*u.kpc)*(radius<x1*u.kpc)
-        ymat, xmat = np.indices(s.shape[1:])
-        dchan = channel[idx]-s.shape[0]/2
-        accumspec = np.zeros(s.shape[0])
+        ymat, xmat = np.indices(sc.shape[1:])
+        dchan = channel[idx]-sc.shape[0]/2
+        accumspec = np.zeros(sc.shape[0])
 
         for deltachan,yspec,xspec in zip(dchan,ymat[idx],xmat[idx]):
             if np.isfinite(deltachan):
-                accumspec += channelShift(s[:,yspec,xspec],deltachan)
-        import pdb; pdb.set_trace()
+                accumspec += channelShift(sc[:,yspec,xspec],deltachan)
         labels,_ = nd.measurements.label(accumspec>0)
         pk = np.argmax(accumspec)
         roi = (labels == labels[pk])
         v0 = np.sum(accumspec[roi]*vaxis[roi])/np.sum(accumspec[roi])
         sigma[ctr] = (np.sum(accumspec[roi]*(vaxis[roi]-v0)**2)/np.sum(accumspec[roi]))**0.5
+        print(ctr)
     return sigma
 
     
-def ism_veldisp(momentname = '/home/erosolow/bigdata/erosolo/m83/data/m83.mom1.fits',
-                cubename = '/home/erosolow/bigdata/erosolo/m83/data/m83.co10.K_correct.fits',
+def ism_veldisp(momentname = '/home/erosolow/fastdata/m83/data/m83.mom1.fits',
+                cubename = '/home/erosolow/fastdata/m83/data/m83.co10.K_correct.fits',
                 dr = 0.25, nbins=100):
-    sc = SpectralCube.read(cubename)
-    _, dec, ra = scworld[0,:,:]
+    sc = SpectralCube.read(cubename,allow_huge_operations=True,
+                           mode='readonly',memmap=False)
+    _, dec, ra = sc.world[0,:,:]
     mom1 = fits.getdata(momentname)
 #    mom1 = nd.generic_filter(mom1,np.nanmedian,size=1)
     wcs_mom1 = wcs.WCS(momentname)
     xvals, yvals = wcs_mom1.celestial.wcs_world2pix(ra,dec,0)
     vvals = nd.interpolation.map_coordinates(mom1.squeeze(),[yvals.ravel(),xvals.ravel()],order=1)*u.m/u.s
-    intfunc = interp.interp1d(sc.spectral_axis.value,np.arange(scshape[0]),bounds_error = False)
+    intfunc = interp.interp1d(sc.spectral_axis.value,np.arange(sc.shape[0]),bounds_error = False)
     channel = intfunc(vvals.to(u.km/u.s).value-10.919938)
     channel.shape = sc.shape[1:]
     m83 = Galaxy('M83')
@@ -104,7 +173,7 @@ def ism_veldisp(momentname = '/home/erosolow/bigdata/erosolo/m83/data/m83.mom1.f
     inneredge, outeredge = np.linspace(0,6,nbins), np.linspace(0+dr,6+dr,nbins)
     vaxis = sc.spectral_axis.to(u.km/u.s).value
     sigma = np.zeros(nbins)
-    for ctr, edges in enumerate(zip(inneredge,outeredge)):
+    for ctr, edges in enumerate(zip(inneredge[0:10],outeredge[0:10])):
         x0,x1 = edges
         idx = (radius>=x0*u.kpc)*(radius<x1*u.kpc)
         ymat, xmat = np.indices(sc.shape[1:])
@@ -119,9 +188,10 @@ def ism_veldisp(momentname = '/home/erosolow/bigdata/erosolo/m83/data/m83.mom1.f
         roi = (labels == labels[pk])
         v0 = np.sum(accumspec[roi]*vaxis[roi])/np.sum(accumspec[roi])
         sigma[ctr] = (np.sum(accumspec[roi]*(vaxis[roi]-v0)**2)/np.sum(accumspec[roi]))**0.5
+        print ctr, sigma[ctr]
     return sigma
     
-def things_vrot(momentname = '/home/erosolow/bigdata/erosolo/m83/data/m83.mom1.fits',
+def things_vrot(momentname = '/home/erosolow/fastdata/m83/data/NGC_5236_RO_MOM1:I:HI:wbb2008.fits',
                 dr = 0.25,nbins=100):
     m83 = Galaxy('M83')
     mom1 = fits.getdata(momentname).squeeze()
@@ -132,7 +202,7 @@ def things_vrot(momentname = '/home/erosolow/bigdata/erosolo/m83/data/m83.mom1.f
     r = (x**2+y**2)**0.5
     r = r.to(u.kpc).value
     #Optical frame Vsys
-    vrot = (mom1*u.km/u.s-506*u.km/u.s)/(np.sin(m83.inclination)*np.cos(phi))
+    vrot = (mom1/1e3*u.km/u.s-506*u.km/u.s)/(np.sin(m83.inclination)*np.cos(phi))
     idx = np.abs(np.cos(phi))>0.25
     inneredge, outeredge = np.linspace(0,6,nbins), np.linspace(0+dr,6+dr,nbins)
     vprof = np.zeros(nbins)
@@ -147,7 +217,7 @@ def things_vrot(momentname = '/home/erosolow/bigdata/erosolo/m83/data/m83.mom1.f
         radprof[ctr] = np.nanmean(r[idx])
     return radprof,vprof,vscatter
     
-def things_profile(momentname = '/home/erosolow/bigdata/erosolo/m83/data/NGC_5236_RO_MOM0:I:HI:wbb2008.fits',
+def things_profile(momentname = '/home/erosolow/fastdata/m83/data/NGC_5236_RO_MOM0:I:HI:wbb2008.fits',
                    dr=0.5,nbins=100):
     m83 = Galaxy('M83')
     mom0 = fits.getdata(momentname).squeeze()
@@ -185,8 +255,8 @@ def alma_profile(momentname = 'm83.moment0.fits',
     sdprof *= np.cos(m83.inclination)*4.35
     return radprof, sdprof
         
-def alma_moment0(maskname = '/home/erosolow/bigdata/erosolo/m83/data/m83.co10.K_mask.fits',
-                 cubename = '/home/erosolow/bigdata/erosolo/m83/data/m83.co10.K_correct.fits'):
+def alma_moment0(maskname = '/home/erosolow/fastdata/m83/data/m83.co10.K_mask.fits',
+                 cubename = '/home/erosolow/fastdata/m83/data/m83.co10.K_correct.fits'):
 
     # cube = fits.getdata(cubename)
     # header = fits.getheader(cubename)
@@ -218,7 +288,7 @@ def alma_mask():
     emap = fits.getdata('m83.errormap.fits')
     sm_emap = nd.median_filter(emap,footprint=morph.disk(17))
     
-def alma_errormap(cube = '/home/erosolow/bigdata/erosolo/m83/data/m83.co10.K_correct.fits'):
+def alma_errormap(cube = '/home/erosolow/fastdata/m83/data/m83.co10.K_correct.fits'):
     s = SpectralCube.read(cube)
     m83 = Galaxy('M83')
     _,dec,ra = s.world[0,:,:]
@@ -237,3 +307,6 @@ def alma_errormap(cube = '/home/erosolow/bigdata/erosolo/m83/data/m83.co10.K_cor
     emap*=1.4826 # convert to rms scales
     hdu = fits.PrimaryHDU(emap,header=s.header)
     hdu.writeto('m83.errormap.fits',clobber=True)
+
+def profile_plots():
+    pass
