@@ -10,15 +10,13 @@ import matplotlib.pyplot as plt
 import powerlaw
 from galaxies import Galaxy
 import astropy.units as u
-from tabulate import tabulate
 from prettytable import PrettyTable
-
 #get info about m83
 mygalaxy=Galaxy("M83")
 print(mygalaxy)
 
 #load fits file
-t=Table.read('/srv/astro/erosolo/m83/measurements/m83.co10.K_props_cprops.fits')
+t=Table.read('m83.co10.K_props_clfind.fits')
 
 #find cloud's galactocentric distance
 rgal=mygalaxy.radius(ra=(t['XPOS']), dec=(t['YPOS']))

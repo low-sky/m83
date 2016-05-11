@@ -12,7 +12,7 @@ import astropy.units as u
 mygalaxy=Galaxy("M83")
 print(mygalaxy)
 
-mytable=Table.read('/home/pafreema/Documents/m83.co10.K_props_cprops.fits')
+mytable=Table.read('/home/pafreema/Documents/m83.co10.K_props_clfind.fits')
 
 idx = np.where(np.isfinite(mytable['VIRMASS_EXTRAP_DECONV'])) #removes values that are infinite/NaN
 

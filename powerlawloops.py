@@ -16,7 +16,7 @@ mygalaxy=Galaxy("M83")
 print(mygalaxy)
 
 #load fits file
-t=Table.read('/Users/erik/m83.co10.K_props_cprops.fits')
+t=Table.read('m83.co10.K_props_clfind.fits')
 
 #find cloud's galactocentric distance
 rgal=mygalaxy.radius(ra=(t['XPOS']), dec=(t['YPOS']))
