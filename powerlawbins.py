@@ -52,7 +52,7 @@ fit_1_subset=powerlaw.Fit(massdisk1_subset, xmin=3e5)
 R1,p1=fit_1_subset.distribution_compare('power_law', 'truncated_power_law')
 
 fig=plt.figure(figsize=(7.5,5))
-ax=fig.add_subplot(111)
+ax=fig.add_subplot(231)
 ax.spines['top'].set_color('none')
 ax.spines['bottom'].set_color('none')
 ax.spines['left'].set_color('none')
