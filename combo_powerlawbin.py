@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 import powerlaw
 from galaxies import Galaxy
 import astropy.units as u
+import matplotlib as mpl
+mpl.rcParams['font.family']='serif'
+mpl.rcParams['font.serif'] = 'Times New Roman'
 
 #get info about m83
 mygalaxy=Galaxy("M83")
@@ -44,8 +47,8 @@ for idx,edge in enumerate(massedges):
     radedges[idx] = np.min(radsort[mcum>=edge])
     
 
-#edges = np.array([0,450,2300,3200,3900,4500])
-edges = radedges
+edges = np.array([0,450,2300,3200,3900,4500])
+#edges = radedges
 
 plt.clf()
 plt.figure(figsize=(6,4.5))
@@ -57,8 +60,7 @@ for ins,outs in zip(edges[0:-1],edges[1:]):
     area = np.sum((rgal_img>ins)*(rgal_img)<=outs)*apix
     
     plt.loglog(np.sort(mass),np.linspace(len(mass),1,len(mass))/area,
-               drawstyle='steps',
-               label=r'${0:2.1f}<R_g/\rm kpc<{1:2.1f}$'.format(ins/1e3,outs/1e3))
+               label=r'${0:2.1f}<R_g/\rm kpc<{1:2.1f}$'.format(ins/1e3,outs/1e3),marker='o')
 plt.legend(fontsize=10,loc='lower left')
 plt.xlabel(r'$M\ (M_{\odot})$')
 plt.ylabel(r'$n(M^\prime>M)\ (\mathrm{kpc}^{-2})$')
