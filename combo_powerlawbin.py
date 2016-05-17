@@ -53,17 +53,19 @@ edges = np.array([0,450,2300,3200,3900,4500])
 plt.clf()
 plt.figure(figsize=(6,4.5))
 apix = (hdr['CDELT2']*np.pi/180*4.8e6/1e3)**2*np.cos(mygalaxy.inclination)
-for ins,outs in zip(edges[0:-1],edges[1:]):
+shapearray = ['o','+','s','x','d']
+for ins,outs,shape in zip(edges[0:-1],edges[1:],shapearray):
     subset = (t['MASS_EXTRAP']>3e5)*(t['RGAL_PC']<=outs)*(t['RGAL_PC']>ins)
     tt = t[subset]
     mass = tt['MASS_EXTRAP'].data
     area = np.sum((rgal_img>ins)*(rgal_img)<=outs)*apix
     
     plt.loglog(np.sort(mass),np.linspace(len(mass),1,len(mass))/area,
-               label=r'${0:2.1f}<R_g/\rm kpc<{1:2.1f}$'.format(ins/1e3,outs/1e3),marker='o')
-plt.legend(fontsize=10,loc='lower left')
+               label=r'${0:2.1f}<R_g/\rm kpc<{1:2.1f}$'.format(ins/1e3,outs/1e3),marker=shape)
+plt.legend(fontsize=9,loc='lower right',numpoints=2)
 plt.xlabel(r'$M\ (M_{\odot})$')
 plt.ylabel(r'$n(M^\prime>M)\ (\mathrm{kpc}^{-2})$')
+plt.ylim(1e-2,2e2)
 plt.tight_layout()
 plt.savefig('m83_massdist.pdf')
 
