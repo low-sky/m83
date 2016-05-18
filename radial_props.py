@@ -26,7 +26,7 @@ s2n = np.log10(mytable['MAXVAL']/mytable['NOISE'])
 
 plt.clf()
 #plt.figure(figsize=(8.0,4.25))
-fig, axes = plt.subplots(nrows=1, ncols=2,figsize=(8,3.5))
+fig, axes = plt.subplots(nrows=1, ncols=2,figsize=(8.5,4.0))
 fig.subplots_adjust(wspace=0.3,bottom=0.2,right=0.85)
 #plt.subplot(211)
 ax0 = axes[0]
@@ -42,6 +42,20 @@ ax1.set_yscale('log')
 ax1.set_xlim([-0.5,6])
 ax1.set_xlabel(r'$R_{\mathrm{gal}}\ (\mathrm{kpc})$')
 ax1.set_ylabel(r'$\Sigma\ (M_{\odot}\ \mathrm{pc}^{-2})$')
+
+# import astropy.constants as con
+# Pint = mytable['MASS_EXTRAP']*u.M_sun/\
+#     (mytable['RADRMS_EXTRAP_DECONV']*u.pc)**3*\
+#     (mytable['VRMS_EXTRAP_DECONV']*u.km/u.s)**2/con.k_B
+# Pint = Pint.to(u.K/(u.cm**3)).value
+
+# ax2 = axes[2]
+# im3 = ax2.scatter(mytable['RADIUS_KPC'],Pint,marker='s',cmap='Greys',color='grey',c=np.log10(mytable['MASS_EXTRAP']))
+# ax2.set_yscale('log')
+# ax2.set_xlim([-0.5,6])
+# ax2.set_xlabel(r'$R_{\mathrm{gal}}\ (\mathrm{kpc})$')
+# ax2.set_ylabel(r'$P_{\mathrm{int}}/k\ \mathrm{K\ cm}^{-3})$')
+
 
 #cb =fig.colorbar(im2, ax=axes.ravel().tolist())
 cbar_ax =  fig.add_axes([0.86, 0.2, 0.025, 0.7])
