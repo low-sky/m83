@@ -48,7 +48,7 @@ for idx,edge in enumerate(massedges):
     
 
 edges = np.array([0,450,2300,3200,3900,4500])
-#edges = radedges
+edges = radedges
 
 plt.clf()
 plt.figure(figsize=(6,4.5))
