@@ -15,7 +15,7 @@ import astropy.units as u
 mygalaxy=Galaxy("M83")
 print(mygalaxy)
 
-t=Table.read('/home/pafreema/Documents/m83.co10.K_props_cprops.fits')
+t=Table.read('m83.co10.K_props_clfind.fits')
 
 rgal=mygalaxy.radius(ra=(t['XPOS']), dec=(t['YPOS']))
 

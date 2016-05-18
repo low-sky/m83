@@ -18,38 +18,55 @@ print(mygalaxy)
 #load fits file
 t=Table.read('m83.co10.K_props_clfind.fits')
 
+minmass = 3e5
 #find cloud's galactocentric distance
 rgal=mygalaxy.radius(ra=(t['XPOS']), dec=(t['YPOS']))
-
+fit1,fit2 = 'truncated_power_law','schechter'
+fit1,fit2 = 'power_law','truncated_power_law'
+fit1,fit2 = 'power_law','schechter'
 #add those distances to the fits table
-colrgal=Column(name='RADIUS_PC',data=(rgal))
+colrgal=Column(name='RGAL_PC',data=(rgal))
 t.add_column(colrgal)
 #print(t)
 
 #fit for the whole galaxy
 mass=t['MASS_EXTRAP'].data
 myfit=powerlaw.Fit(mass)
-idx=np.where(t['MASS_EXTRAP']>3e5)
+idx=np.where(t['MASS_EXTRAP']>minmass)
 mass_subset=t['MASS_EXTRAP'][idx].data
-myfit_subset=powerlaw.Fit(mass_subset, xmin=3e5)
-R,p=myfit_subset.distribution_compare('power_law', 'truncated_power_law')
+myfit_subset=powerlaw.Fit(mass_subset, xmin=minmass)
+R,p=myfit_subset.distribution_compare(fit1, fit2)
+
+edges = np.array([0,450,2300,3200,3900,4500])
+#edges = radedges
+
+plt.clf()
+plt.figure(figsize=(8,4.5))
+apix = (hdr['CDELT2']*np.pi/180*4.8e6/1e3)**2*np.cos(mygalaxy.inclination)
+for ins,outs in zip(edges[0:-1],edges[1:]):
+    subset = (t['MASS_EXTRAP']>3e5)*(t['RGAL_PC']<=outs)*(t['RGAL_PC']>ins)
+    tt = t[subset]
+    mass = tt['MASS_EXTRAP'].data
+    fit=powerlaw.Fit(mass, xmin=minmass)
+    
+
 
 #plot bin 1
 
 #index the file so you get clouds within a certain radius
 idx_1=np.where(t['RADIUS_PC']<450)
-idxmass_1=np.where((t['MASS_EXTRAP']>3e5)&(t['RADIUS_PC']<450))
+idxmass_1=np.where((t['MASS_EXTRAP']>minmass)&(t['RADIUS_PC']<450))
 
 #pull out the mass variable and fit it
 massdisk1=t['MASS_EXTRAP'][idx_1].data
 fit_1=powerlaw.Fit(massdisk1)
 massdisk1_subset=t['MASS_EXTRAP'][idxmass_1].data
-fit_1_subset=powerlaw.Fit(massdisk1_subset, xmin=3e5)
+fit_1_subset=powerlaw.Fit(massdisk1_subset, xmin=minmass)
 
 
 #compares two different forms of the distribution
 #R<0 means the data is more consistent with the right distribution, p is the significance of the result
-R1,p1=fit_1_subset.distribution_compare('power_law', 'truncated_power_law')
+R1,p1=fit_1_subset.distribution_compare(fit1, fit2)
 
 fig=plt.figure(figsize=(7.5,5))
 ax=fig.add_subplot(231)
@@ -74,14 +91,14 @@ plt.setp(ax1.get_xticklabels(), visible=False)
 #plot bin 2
 
 idx_2=np.where((t['RADIUS_PC']>450)&(t['RADIUS_PC']<2300))
-idxmass_2=np.where((t['MASS_EXTRAP']>3e5)&(t['RADIUS_PC']>450)&(t['RADIUS_PC']<2300))
+idxmass_2=np.where((t['MASS_EXTRAP']>minmass)&(t['RADIUS_PC']>450)&(t['RADIUS_PC']<2300))
 
 massdisk2_subset=t['MASS_EXTRAP'][idxmass_2].data
-fit_2_subset=powerlaw.Fit(massdisk2_subset, xmin=3e5)
+fit_2_subset=powerlaw.Fit(massdisk2_subset, xmin=minmass)
 massdisk2=t['MASS_EXTRAP'][idx_2].data
 fit_2=powerlaw.Fit(massdisk2)
 
-R2,p2=fit_2_subset.distribution_compare('power_law', 'truncated_power_law')
+R2,p2=fit_2_subset.distribution_compare(fit1, fit2)
 
 ax2=fig.add_subplot(232, sharex=ax1, sharey=ax1)
 fit_2_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
@@ -98,16 +115,16 @@ plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 #plot bin 3
 
 idx_3=np.where((t['RADIUS_PC']>2300)&(t['RADIUS_PC']<3200))
-idxmass_3=np.where((t['MASS_EXTRAP']>3e5)&(t['RADIUS_PC']>2300)&(t['RADIUS_PC']<3200))
+idxmass_3=np.where((t['MASS_EXTRAP']>minmass)&(t['RADIUS_PC']>2300)&(t['RADIUS_PC']<3200))
 
 massdisk3_subset=t['MASS_EXTRAP'][idxmass_3].data
-fit_3_subset=powerlaw.Fit(massdisk3_subset, xmin=3e5)
+fit_3_subset=powerlaw.Fit(massdisk3_subset, xmin=minmass)
 
 massdisk3=t['MASS_EXTRAP'][idx_3].data
 fit_3=powerlaw.Fit(massdisk3)
 
 
-R3,p3=fit_3_subset.distribution_compare('power_law', 'truncated_power_law')
+R3,p3=fit_3_subset.distribution_compare(fit1, fit2)
 
 ax3=fig.add_subplot(234, sharex=ax1, sharey=ax1)
 fit_3_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
@@ -120,16 +137,16 @@ plt.text(2*10e4, 2*10e-4, '(c)')
 #plot bin 4
 
 idx_4=np.where((t['RADIUS_PC']>3200)&(t['RADIUS_PC']<3900))
-idxmass_4=np.where((t['MASS_EXTRAP']>3e5)&(t['RADIUS_PC']>3200)&(t['RADIUS_PC']<3900))
+idxmass_4=np.where((t['MASS_EXTRAP']>minmass)&(t['RADIUS_PC']>3200)&(t['RADIUS_PC']<3900))
 
 massdisk4_subset=t['MASS_EXTRAP'][idxmass_4].data
-fit_4_subset=powerlaw.Fit(massdisk4_subset, xmin=3e5)
+fit_4_subset=powerlaw.Fit(massdisk4_subset, xmin=minmass)
 
 massdisk4=t['MASS_EXTRAP'][idx_4].data
 fit_4=powerlaw.Fit(massdisk4)
 
 
-R4,p4=fit_4_subset.distribution_compare('power_law', 'truncated_power_law')
+R4,p4=fit_4_subset.distribution_compare(fit1, fit2)
 
 ax4=fig.add_subplot(235, sharex=ax1, sharey=ax1)
 fit_4_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
@@ -143,15 +160,15 @@ plt.setp(ax4.get_yticklabels(), visible=False)
 #plot bin 5
 
 idx_5=np.where((t['RADIUS_PC']>3900)&(t['RADIUS_PC']<4500))
-idxmass_5=np.where((t['MASS_EXTRAP']>3e5)&(t['RADIUS_PC']>3900)&(t['RADIUS_PC']<4500))
+idxmass_5=np.where((t['MASS_EXTRAP']>minmass)&(t['RADIUS_PC']>3900)&(t['RADIUS_PC']<4500))
 
 massdisk5_subset=t['MASS_EXTRAP'][idxmass_5].data
-fit_5_subset=powerlaw.Fit(massdisk5_subset, xmin=3e5)
+fit_5_subset=powerlaw.Fit(massdisk5_subset, xmin=minmass)
 
 massdisk5=t['MASS_EXTRAP'][idx_5].data
 fit_5=powerlaw.Fit(massdisk5)
 
-R5,p5=fit_5_subset.distribution_compare('power_law', 'truncated_power_law')
+R5,p5=fit_5_subset.distribution_compare(fit1, fit2)
 
 ax5=fig.add_subplot(236, sharex=ax1, sharey=ax1)
 fit_5_subset.truncated_power_law.plot_ccdf(label='Trunc. Power Law')
