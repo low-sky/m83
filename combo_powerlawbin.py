@@ -13,7 +13,7 @@ import astropy.units as u
 import matplotlib as mpl
 mpl.rcParams['font.family']='serif'
 mpl.rcParams['font.serif'] = 'Times New Roman'
-
+mpl.rcParams['font.size']=14
 #get info about m83
 mygalaxy=Galaxy("M83")
 print(mygalaxy)
@@ -51,7 +51,7 @@ edges = np.array([0,450,2300,3200,3900,4500])
 edges = radedges
 
 plt.clf()
-plt.figure(figsize=(6,4.5))
+plt.figure(figsize=(5.25,4.5))
 apix = (hdr['CDELT2']*np.pi/180*4.8e6/1e3)**2*np.cos(mygalaxy.inclination)
 shapearray = ['o','+','s','x','d']
 for ins,outs,shape in zip(edges[0:-1],edges[1:],shapearray):

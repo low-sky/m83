@@ -30,13 +30,19 @@ mytable.add_column(colrgal)
 #                      mytable['MASS_EXTRAP'])>-1)
 #condition = mytable['PEAK_TO_EDGE']>0
 condition = np.ones(len(mytable),dtype=np.bool)
-condition = mytable['MAXVAL']/mytable['NOISE']>5
+condition = (mytable['MAXVAL']/mytable['NOISE']>5)*(rgal>1*u.kpc)*(mytable['RADRMS_EXTRAP_DECONV']>20)
+condition2 = (mytable['MAXVAL']/mytable['NOISE']>5)*(rgal<1*u.kpc)*(mytable['RADRMS_EXTRAP_DECONV']>20)
 idx = np.where(condition)
+idx2 = np.where(condition2)
+mytable2 = mytable[idx2]
 mytable = mytable[idx]
 #m,b=np.polyfit(np.log(mytable['MASS_EXTRAP']),np.log(mytable['VIRMASS_EXTRAP_DECONV']),1)
 figure=plt.figure(figsize=(8.0,7.5)) #figure size in inche
 ax = plt.subplot(221)
-plt.scatter(mytable['MASS_EXTRAP'],mytable['VIRMASS_EXTRAP_DECONV'], c=mytable['RADIUS_KPC'], marker='s',cmap='Greys')
+plt.scatter(mytable['MASS_EXTRAP'],mytable['VIRMASS_EXTRAP_DECONV'], 
+            c=mytable['RADIUS_KPC'], marker='s',cmap='Greys',vmin=0,vmax=5)
+plt.scatter(mytable2['MASS_EXTRAP'],mytable2['VIRMASS_EXTRAP_DECONV'], 
+            c=mytable2['RADIUS_KPC'], marker='D',cmap='Greys',vmin=0,vmax=5,s=8)
 test_mass = np.logspace(5,9,100)
 #plt.plot(test_mass,np.exp(m*np.log(test_mass)+b)) #fit line for m83
 plt.plot(test_mass,test_mass,alpha=0.5,linewidth=2) #fitted x=y
@@ -53,7 +59,11 @@ plt.tight_layout()
 #n,c=np.polyfit(np.log(mytable['RADRMS_EXTRAP_DECONV']),np.log(mytable['VRMS_EXTRAP_DECONV']),1)
 #figure=plt.figure(figsize=(4.5,4)) #figure size in inches
 ax = plt.subplot(222)
-plt.scatter(mytable['RADRMS_EXTRAP_DECONV'],mytable['VRMS_EXTRAP_DECONV'], c=mytable['RADIUS_KPC'], marker='s',cmap='Greys')
+plt.scatter(mytable['RADRMS_EXTRAP_DECONV'],mytable['VRMS_EXTRAP_DECONV'], 
+            c=mytable['RADIUS_KPC'], marker='s',cmap='Greys',vmin=0,vmax=5)
+plt.scatter(mytable2['RADRMS_EXTRAP_DECONV'],mytable2['VRMS_EXTRAP_DECONV'], 
+            c=mytable2['RADIUS_KPC'], marker='D',cmap='Greys',vmin=0,vmax=5,s=8)
+
 test_radius=np.logspace(0,3,100)
 #plt.plot(test_radius, np.exp(n*np.log(test_radius)+c)) #fit line for m83
 plt.plot(test_radius, ((np.pi**0.5/3.4)**0.5)*(test_radius**0.5)) #fit line from Solomon et al.- using effective radius
@@ -70,7 +80,10 @@ plt.tight_layout()
 #p,d=np.polyfit(np.log(mytable['RADRMS_EXTRAP_DECONV']),np.log(mytable['MASS_EXTRAP']),1)
 #figure=plt.figure(figsize=(4.5,4)) #figure size in inches
 ax = plt.subplot(223)
-plt.scatter(mytable['RADRMS_EXTRAP_DECONV'],mytable['MASS_EXTRAP'],c=mytable['RADIUS_KPC'], marker='s',cmap='Greys')
+plt.scatter(mytable['RADRMS_EXTRAP_DECONV'],mytable['MASS_EXTRAP'],
+            c=mytable['RADIUS_KPC'], marker='s',cmap='Greys',vmin=0,vmax=5)
+plt.scatter(mytable2['RADRMS_EXTRAP_DECONV'],mytable2['MASS_EXTRAP'],
+            c=mytable2['RADIUS_KPC'], marker='D',cmap='Greys',vmin=0,vmax=5,s=8)
 test_mr=np.logspace(0,3,100)
 #plt.plot(test_mr,np.exp(p*np.log(test_mr)+d)) #fit line for m83
 plt.plot(test_mr, (540*test_mr**(2))) #fit line from Solomon et al. - using effective radius
@@ -86,7 +99,10 @@ plt.tight_layout()
 ax = plt.subplot(224)
 plt.scatter((mytable['MASS_EXTRAP'])/(mytable['RADRMS_EXTRAP_DECONV'])**2/np.pi,
             (mytable['VRMS_EXTRAP_DECONV']**2)/(mytable['RADRMS_EXTRAP_DECONV']), 
-            marker='s',cmap='Greys',c=mytable['RADIUS_KPC'])
+            marker='s',cmap='Greys',c=mytable['RADIUS_KPC'],vmin=0,vmax=5)
+plt.scatter((mytable2['MASS_EXTRAP'])/(mytable2['RADRMS_EXTRAP_DECONV'])**2/np.pi,
+            (mytable2['VRMS_EXTRAP_DECONV']**2)/(mytable2['RADRMS_EXTRAP_DECONV']),
+            marker='D',cmap='Greys',c=mytable2['RADIUS_KPC'],vmin=0,vmax=5,s=8)
 test_mr=np.logspace(1,4,10)
 #plt.plot(test_mr,np.exp(p*np.log(test_mr)+d)) #fit line for m83
 plt.plot(test_mr, test_mr/300) #fit line from Solomon et al. - using effective radius

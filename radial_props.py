@@ -32,15 +32,15 @@ fig.subplots_adjust(wspace=0.3,bottom=0.2,right=0.85)
 ax0 = axes[0]
 im1 = ax0.scatter(mytable['RADIUS_KPC'],mytable['VRMS_EXTRAP_DECONV']/mytable['RADRMS_EXTRAP_DECONV']**0.5,marker='s',cmap='Greys',color='grey',c=np.log10(mytable['MASS_EXTRAP']))
 ax0.set_yscale('log')
-ax0.set_ylabel(r'$\sigma_v/\sqrt{R}\ (\mathrm{km\ s^{-1}\ pc^{-1/2}})$')
-ax0.set_xlabel(r'$R_{\mathrm{gal}}\ (\mathrm{kpc})$')
+ax0.set_ylabel(r'$\sigma_v/\sqrt{R_0}\ (\mathrm{km\ s^{-1}})$')
+ax0.set_xlabel(r'$R_g\ (\mathrm{kpc})$')
 ax0.set_xlim([-0.5,6])
 
 ax1 = axes[1]
 im2 = ax1.scatter(mytable['RADIUS_KPC'],mytable['MASS_EXTRAP']/mytable['RADRMS_EXTRAP_DECONV']**2/np.pi,marker='s',cmap='Greys',color='grey',c=np.log10(mytable['MASS_EXTRAP']))
 ax1.set_yscale('log')
 ax1.set_xlim([-0.5,6])
-ax1.set_xlabel(r'$R_{\mathrm{gal}}\ (\mathrm{kpc})$')
+ax1.set_xlabel(r'$R_{g}\ (\mathrm{kpc})$')
 ax1.set_ylabel(r'$\Sigma\ (M_{\odot}\ \mathrm{pc}^{-2})$')
 
 # import astropy.constants as con

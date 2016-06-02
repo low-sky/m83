@@ -34,6 +34,8 @@ for ins,outs in zip(edge_in,edge_out):
         (tt['RADRMS_EXTRAP_DECONV']*u.pc)**3
     Pint = rho*(tt['VRMS_EXTRAP_DECONV']*u.km/u.s)**2/con.k_B
     Surfdens = tt['MASS_EXTRAP']*u.M_sun/(tt['RADRMS_EXTRAP_DECONV']*u.pc)**2/np.pi
-
+    Sigma0 = (tt['VRMS_EXTRAP_DECONV'].data)*(tt['RADRMS_EXTRAP_DECONV'].data)**(-0.5)
     tff = ((3*np.pi/(32*con.G*rho))**0.5).to(u.Myr)
-    print 'in={0} out={1} Pressure={2:3.2g}, surfdens={3:3.2g}, tff={4:3.2g}'.format(ins,outs,np.nanmedian(Pint.to(u.K/(u.cm**3))),np.nanmedian(Surfdens),np.nanmedian(tff))
+    print 'in={0} out={1} Pressure={2:3.2g}, surfdens={3:3.2g}, tff={4:3.2g} sig0={5:3.2g}'.format(ins,outs,
+                                                                                     np.nanmedian(Pint.to(u.K/(u.cm**3))),
+                                                                                     np.nanmedian(Surfdens),np.nanmedian(tff),np.nanmedian(Sigma0))
