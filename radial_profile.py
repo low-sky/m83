@@ -12,7 +12,7 @@ from astropy import wcs
 from scipy.stats import binned_statistic
 from radio_beam import Beam
 import scipy.interpolate as interp
-
+from astropy.table import Table
 
 def channelShift(x,ChanShift):
     # Shift a spectrum by a set number of channels.  
@@ -42,6 +42,39 @@ def lundgren_vrot(radius):
           (kv(0,y)*iv(0,y)-kv(1,y)*iv(1,y)))**0.5
     vc = vc.to(u.km/u.s)
     return vc
+
+def mass_scales():
+    t = Table.read('m83.profiles.fits')
+
+    sigmav = ((t['sigma_v_hi']**2+t['sigma_v_h2']**2)**0.5).data*(u.km/u.s)
+    surfdens = 0*(t['Surfdens_HI']).data*(u.M_sun/u.pc**2)+\
+               lundgren_surfdens(t['Radius'].data*u.kpc)
+    
+#    sigmav = np.max(np.c_[t[sigma_v_hi],t[sigma_v_h2]],axis=1)
+    M_J = (np.pi*sigmav**4/(4*con.G**2*surfdens)).to(u.M_sun)
+
+    kappasq = lundgren_epicyclic(t['Radius'].data*u.kpc)
+    M_T = (4*np.pi**5*con.G**2*surfdens**3/kappasq**2).to(u.M_sun)
+    
+    edges = np.array([0,450,2300,3200,3900,4500])
+    for ins,outs in zip(edges[0:-1],edges[1:]):
+        idx = (t['Radius']>=ins/1e3)*(t['Radius']<outs/1e3)
+        print '{0}-{1}: Jeans = {2}, Toomre = {3}'.format(ins,outs,
+                                                          np.median(M_J[idx])/1e6,
+                                                          np.median(M_T[idx])/1e6)
+#        import pdb;pdb.set_trace()
+
+    return(M_J,M_T)
+
+def lundgren_epicyclic(radius):
+    diskmass = 6e10*u.M_sun*(4.8/4.5)
+    diskradius = (2.7*u.kpc*4.8/4.5)
+    y = (radius/diskradius).to(u.dimensionless_unscaled)
+    y = y.value
+    kappasq = (con.G*diskmass/diskradius**3*
+               ((2*iv(0,y)+y*iv(1,y))*kv(0,y)-
+                (y*iv(0,y)+iv(1,y))*kv(1,y))).to(u.s**(-2))
+    return(kappasq)
 
 def alma_mask():
     pass
