@@ -11,6 +11,12 @@ import powerlaw
 from galaxies import Galaxy
 import astropy.units as u
 from prettytable import PrettyTable
+import matplotlib as mpl
+mpl.rcParams['font.family']='serif'
+mpl.rcParams['font.serif'] = 'Times New Roman'
+mpl.rcParams['font.size']=12
+
+
 #get info about m83
 mygalaxy=Galaxy("M83")
 print(mygalaxy)
@@ -19,7 +25,7 @@ print(mygalaxy)
 tin=Table.read('m83.co10.K_props_clfind.fits')
 
 minmass_global = 3e5
-minmass = 3e5
+minmass = 5e5
 #find cloud's galactocentric distance
 rgal=mygalaxy.radius(ra=(tin['XPOS']), dec=(tin['YPOS']))
 # fit1,fit2 = 'truncated_power_law','schechter'
@@ -46,7 +52,7 @@ edge_out = np.array([450,2300,3200,3900,4500,10000])
 #plt.figure(figsize=(8,4.5))
 #apix = (hdr['CDELT2']*np.pi/180*4.8e6/1e3)**2*np.cos(mygalaxy.inclination)
 
-t = Table(names=['Rmin','Rmax','R_tpl','p_tpl','index','Mtrunc_tpl','R_sch','p_sch','Mtrunc_sch','M1','M5','Mean5'])
+t = Table(names=['Rmin','Rmax','R_tpl','p_tpl','index','index_tpl','Mtrunc_tpl','R_sch','p_sch','Mtrunc_sch','M1','M5','Mean5'])
 
 fig, axes = plt.subplots(nrows=2, ncols=3,figsize=(8.5,4.0))
 #fig.subplots_adjust(wspace=0.3,bottom=0.2,right=0.85)
@@ -57,7 +63,8 @@ for ins,outs, ax,ctr in zip(edge_in,edge_out,axes.flatten(),bin):
     tt = tin[subset]
     mass = np.sort(tt['MASS_EXTRAP'].data)[::-1]
     minmass = np.max([minmass_global,mass.min()])
-    fit=powerlaw.Fit(mass, xmin=minmass)
+    fit=powerlaw.Fit(mass, xmin=minmass,discrete=True)
+#    fit=powerlaw.Fit(mass,discrete=True)
     R1,p1=fit.distribution_compare('power_law','truncated_power_law')
     R2,p2 = fit.distribution_compare('power_law','schechter')
     R3,p3 = fit.distribution_compare('schechter','truncated_power_law')
@@ -66,23 +73,33 @@ for ins,outs, ax,ctr in zip(edge_in,edge_out,axes.flatten(),bin):
     t[-1]['Rmax']=outs
     t[-1]['R_tpl']=R1
     t[-1]['p_tpl']=p1
-    t[-1]['R_sch']=R2
-    t[-1]['p_sch']=p2
+    t[-1]['R_sch']=R3
+    t[-1]['p_sch']=p3
     t[-1]['index']=fit.alpha
+    t[-1]['index_tpl']=fit.truncated_power_law.parameter1
     t[-1]['Mtrunc_tpl']=1/fit.truncated_power_law.parameter2
     t[-1]['Mtrunc_sch']=1/fit.schechter.parameter1
     t[-1]['M1']=mass[0]
     t[-1]['M5']=mass[4]
     t[-1]['Mean5']=np.exp(np.mean(np.log(mass[0:5])))
     fit.truncated_power_law.plot_ccdf(ax=ax,label='Trunc. Power Law')
-    fit.power_law.plot_ccdf(ax=ax,label='Power Law')
+    fit.power_law.plot_ccdf(ax=ax,label='Power Law',linestyle='--')
     fit.plot_ccdf(ax=ax,drawstyle='steps', label='Data')
-    ax.axis([2e5, 3e7, 1e-2, 2])
+    ax.axis([2e5, 3e7, 3e-3, 2])
     if ctr % 3 != 0:
         plt.setp(ax.get_yticklabels(), visible=False)
+    if ctr % 3 == 0:
+        print(ctr)
+        ax.set_ylabel('CCDF')
+
     if ctr // 3 == 0:
         plt.setp(ax.get_xticklabels(), visible=False)
-    
+    if ctr // 3 == 1:
+        print(ctr)
+        ax.set_xlabel(r'Mass ($M_{\odot}$)')
+
+plt.tight_layout()
+plt.savefig('pldists.pdf')
 
 #plot bin 1
 

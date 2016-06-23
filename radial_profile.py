@@ -36,7 +36,7 @@ def lundgren_surfdens(radius):
 def lundgren_vrot(radius):
     diskmass = 6e10*u.M_sun*(4.8/4.5)
     diskradius = (2.7*u.kpc*4.8/4.5)
-    y = (radius/diskradius).to(u.dimensionless_unscaled)
+    y = (radius/diskradius/2).to(u.dimensionless_unscaled)
     y = y.value
     vc = (2*con.G*diskmass*y**2/(diskradius)*
           (kv(0,y)*iv(0,y)-kv(1,y)*iv(1,y)))**0.5
@@ -47,15 +47,15 @@ def mass_scales():
     t = Table.read('m83.profiles.fits')
 
     sigmav = ((t['sigma_v_hi']**2+t['sigma_v_h2']**2)**0.5).data*(u.km/u.s)
-    surfdens = 0*(t['Surfdens_HI']).data*(u.M_sun/u.pc**2)+\
-               lundgren_surfdens(t['Radius'].data*u.kpc)
+    surfdens = (t['Surfdens_HI']).data*(u.M_sun/u.pc**2)+\
+        lundgren_surfdens(t['Radius'].data*u.kpc)
     
 #    sigmav = np.max(np.c_[t[sigma_v_hi],t[sigma_v_h2]],axis=1)
     M_J = (np.pi*sigmav**4/(4*con.G**2*surfdens)).to(u.M_sun)
 
     kappasq = lundgren_epicyclic(t['Radius'].data*u.kpc)
     M_T = (4*np.pi**5*con.G**2*surfdens**3/kappasq**2).to(u.M_sun)
-    
+    import pdb; pdb.set_trace()
     edges = np.array([0,450,2300,3200,3900,4500])
     for ins,outs in zip(edges[0:-1],edges[1:]):
         idx = (t['Radius']>=ins/1e3)*(t['Radius']<outs/1e3)
@@ -69,7 +69,7 @@ def mass_scales():
 def lundgren_epicyclic(radius):
     diskmass = 6e10*u.M_sun*(4.8/4.5)
     diskradius = (2.7*u.kpc*4.8/4.5)
-    y = (radius/diskradius).to(u.dimensionless_unscaled)
+    y = (radius/diskradius/2).to(u.dimensionless_unscaled)
     y = y.value
     kappasq = (con.G*diskmass/diskradius**3*
                ((2*iv(0,y)+y*iv(1,y))*kv(0,y)-

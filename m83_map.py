@@ -25,7 +25,11 @@ map.add_colorbar()
 map.tick_labels.set_font(family='serif')
 map.colorbar.set_axis_label_text(r'$T_{\mathrm{max}}\ (\mathrm{K})$')
 map.colorbar.set_axis_label_font(family='serif')
-map.show_contour(radii,levels=[0.45,2.3,3.2,3.9,4.5],colors=['blue']*5,alpha=0.5,linewidths=[3]*5)
+map.show_contour(radii,levels=[0.45,2.3,3.2,3.9,4.5],colors=['blue']*5,alpha=0.5,linewidths=[3]*5,linestyles=['dashed'])
+map.show_contour(radii,levels=[0.2,0.4,0.9,2.2,5.6],colors=['green']*5,
+                 alpha=1.0,linewidths=[1]*5,linestyles='solid')
+
+
 
 t = Table.read('m83.co10.K_props_cprops.fits')
 map.show_markers(t['XPOS'],t['YPOS'],edgecolors=['yellow']*len(t),facecolors=['black']*len(t),s=4)
