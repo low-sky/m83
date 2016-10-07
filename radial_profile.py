@@ -87,15 +87,17 @@ def cloud_veldisp(catalog ='/srv/astro/erosolo/m83/measurements/m83.co10_props_c
     m83 = Galaxy('M83')
     radius = Galaxy.radius(ra=t['RA'],dec=t['DEC'])
 
-def ism_hidisp(momentname = '/srv/astro/erosolo/m83/data/NGC_5236_RO_MOM1:I:HI:wbb2008.fits',
-               cubename = '/srv/astro/erosolo/m83/data/NGC_5236_RO_CUBE:I:HI:wbb2008.fits.gz',
+def ism_hidisp(momentname = '/home/erosolow/bigdata/erosolo/m83/data/NGC_5236_RO_MOM1:I:HI:wbb2008.fits',
+               cubename = '/home/erosolow/bigdata/erosolo/m83/data/NGC_5236_RO_CUBE:I:HI:wbb2008.fits',
                dr = 0.25, nbins=100):
+
     s = SpectralCube.read(cubename)
-    mom1 = fits.getdata(momentname)
+    mom1 = fits.getdata(momentname)/1e3
     m83 = Galaxy('M83')
     radius = m83.radius(header=s.header)
-    intfunc = interp.interp1d(s.spectral_axis.value,np.arange(s.shape[0]),bounds_error = False)
-    channel = intfunc(mom1.squeeze().ravel())
+    channel = np.interp(mom1.squeeze().ravel(),s.spectral_axis.value,np.arange(s.shape[0]))
+#    intfunc = interp.interp1d(s.spectral_axis.value,np.arange(s.shape[0]),bounds_error = False)
+#    channel = intfunc(mom1.squeeze().ravel())
     channel.shape = s.shape[1:]
     inneredge, outeredge = np.linspace(0,6,nbins), np.linspace(0+dr,6+dr,nbins)
     vaxis = s.spectral_axis.to(u.km/u.s).value
@@ -110,7 +112,7 @@ def ism_hidisp(momentname = '/srv/astro/erosolo/m83/data/NGC_5236_RO_MOM1:I:HI:w
         for deltachan,yspec,xspec in zip(dchan,ymat[idx],xmat[idx]):
             if np.isfinite(deltachan):
                 accumspec += channelShift(s[:,yspec,xspec],deltachan)
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         labels,_ = nd.measurements.label(accumspec>0)
         pk = np.argmax(accumspec)
         roi = (labels == labels[pk])
