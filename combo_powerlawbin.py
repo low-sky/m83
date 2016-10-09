@@ -2,38 +2,39 @@
 
 #import libraries
 import astropy
-import astropy.table
+# import astropy.table
 import numpy as np
 from astropy.table import Table
 from astropy.table import Column
 import matplotlib.pyplot as plt
-import powerlaw
+# import powerlaw
 from galaxies import Galaxy
-import astropy.units as u
+# import astropy.units as u
 import matplotlib as mpl
-mpl.rcParams['font.family']='serif'
+import astropy.io.fits as fits
+mpl.rcParams['font.family'] = 'serif'
 mpl.rcParams['font.serif'] = 'Times New Roman'
-mpl.rcParams['font.size']=14
+mpl.rcParams['font.size'] = 14
 #get info about m83
-mygalaxy=Galaxy("M83")
+mygalaxy = Galaxy("M83")
 print(mygalaxy)
 
-#load fits file
-t=Table.read('m83.co10.K_props_clfind.fits')
-import astropy.wcs as wcs
-import astropy.io.fits as fits
+# load fits file
+t = Table.read('m83.co10.K_props_clfind.fits')
+# import astropy.wcs as wcs
+
 data = fits.getdata('m83.co10.tmax.fits')
 hdr = fits.getheader('m83.co10.tmax.fits')
 rgal_img = (mygalaxy.radius(header=hdr)).value
 
-#find cloud's galactocentric distance
+# find cloud's galactocentric distance
 
 
-rgal=mygalaxy.radius(ra=(t['XPOS']), dec=(t['YPOS']))
-colrgal=Column(name='RGAL_PC',data=(rgal))
+rgal = mygalaxy.radius(ra=(t['XPOS']), dec=(t['YPOS']))
+colrgal = Column(name='RGAL_PC', data=(rgal))
 t.add_column(colrgal)
 
-t = t[(t['MASS_EXTRAP'].data>3e5)]
+t = t[(t['MASS_EXTRAP'].data > 3e5)]
 
 
 massvals = t['MASS_EXTRAP'].data
@@ -41,25 +42,26 @@ radvals = t['RGAL_PC'].data
 radsort = np.sort(radvals)
 msort = massvals[np.argsort(radvals)]
 mcum = np.cumsum(msort)
-massedges = np.linspace(0,1,6)*mcum.max()
+massedges = np.linspace(0, 1, 6) * mcum.max()
 radedges = np.zeros(massedges.size)
-for idx,edge in enumerate(massedges):
-    radedges[idx] = np.min(radsort[mcum>=edge])
-    
+for idx, edge in enumerate(massedges):
+    radedges[idx] = np.min(radsort[mcum >= edge])
 
-edges = np.array([0,450,2300,3200,3900,4500])
+
+edges = np.array([0, 450, 2300, 3200, 3900, 4500])
 edges = radedges
 
 plt.clf()
-plt.figure(figsize=(5.25,4.5))
-apix = (hdr['CDELT2']*np.pi/180*4.8e6/1e3)**2*np.cos(mygalaxy.inclination)
-shapearray = ['o','+','s','x','d']
+plt.figure(figsize=(5.25, 4.5))
+apix = (hdr['CDELT2'] * np.pi / 180 * 4.8e6 / 1e3)**2 *\
+    np.cos(mygalaxy.inclination)
+shapearray = ['o', '+', 's', 'x', 'd']
 for ins,outs,shape in zip(edges[0:-1],edges[1:],shapearray):
     subset = (t['MASS_EXTRAP']>3e5)*(t['RGAL_PC']<=outs)*(t['RGAL_PC']>ins)
     tt = t[subset]
     mass = tt['MASS_EXTRAP'].data
     area = np.sum((rgal_img>ins)*(rgal_img)<=outs)*apix
-    
+
     plt.loglog(np.sort(mass),np.linspace(len(mass),1,len(mass))/area,
                label=r'${0:2.1f}<R_g/\rm kpc<{1:2.1f}$'.format(ins/1e3,outs/1e3),marker=shape)
 plt.legend(fontsize=9,loc='lower right',numpoints=2)
@@ -220,9 +222,9 @@ plt.savefig('m83_massdist.pdf')
 # t.add_row(["3.2<r<3.9", R4, p4, -fit_4_subset.alpha,1/fit_4_subset.truncated_power_law.parameter2, -2.20])
 # t.add_row(["3.9<r<4.5", R5, p5, -fit_5_subset.alpha,1/fit_5_subset.truncated_power_law.parameter2, -2.70])
 # print t
-    
+
 # data=t.get_string()
 # with open('powerlawbininfo.txt', 'wb') as f:
 #     f.write(data)
-        
-    
+
+
