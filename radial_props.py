@@ -18,7 +18,7 @@ colrgal=Column(name='RADIUS_KPC',data=(rgal/1e3))
 mytable.add_column(colrgal)
 
 condition = np.ones(len(mytable),dtype=np.bool)
-condition = (mytable['MAXVAL']/mytable['NOISE']>5) & (mytable['RADRMS_EXTRAP_DECONV']>20)
+condition = (mytable['MAXVAL']/mytable['NOISE']>5) & (mytable['RADRMS_GCORR_DECONV']>20)
 idx = np.where(condition)
 mytable = mytable[idx]
 
@@ -30,27 +30,27 @@ fig, axes = plt.subplots(nrows=1, ncols=2,figsize=(8.5,4.0))
 fig.subplots_adjust(wspace=0.3,bottom=0.2,right=0.85)
 #plt.subplot(211)
 ax0 = axes[0]
-im1 = ax0.scatter(mytable['RADIUS_KPC'],mytable['VRMS_EXTRAP_DECONV']/mytable['RADRMS_EXTRAP_DECONV']**0.5,marker='s',cmap='Greys',color='grey',c=np.log10(mytable['MASS_EXTRAP']))
+im1 = ax0.scatter(mytable['RADIUS_KPC'],mytable['VRMS_GCORR_DECONV']/mytable['RADRMS_GCORR_DECONV']**0.5,marker='s',cmap='Greys',color='grey',c=np.log10(mytable['MASS_GCORR']))
 ax0.set_yscale('log')
 ax0.set_ylabel(r'$\sigma_v/\sqrt{R_0}\ (\mathrm{km\ s^{-1}})$')
 ax0.set_xlabel(r'$R_g\ (\mathrm{kpc})$')
 ax0.set_xlim([-0.5,6])
 
 ax1 = axes[1]
-im2 = ax1.scatter(mytable['RADIUS_KPC'],mytable['MASS_EXTRAP']/mytable['RADRMS_EXTRAP_DECONV']**2/np.pi,marker='s',cmap='Greys',color='grey',c=np.log10(mytable['MASS_EXTRAP']))
+im2 = ax1.scatter(mytable['RADIUS_KPC'],mytable['MASS_GCORR']/mytable['RADRMS_GCORR_DECONV']**2/np.pi,marker='s',cmap='Greys',color='grey',c=np.log10(mytable['MASS_GCORR']))
 ax1.set_yscale('log')
 ax1.set_xlim([-0.5,6])
 ax1.set_xlabel(r'$R_{g}\ (\mathrm{kpc})$')
 ax1.set_ylabel(r'$\Sigma\ (M_{\odot}\ \mathrm{pc}^{-2})$')
 
 # import astropy.constants as con
-# Pint = mytable['MASS_EXTRAP']*u.M_sun/\
-#     (mytable['RADRMS_EXTRAP_DECONV']*u.pc)**3*\
-#     (mytable['VRMS_EXTRAP_DECONV']*u.km/u.s)**2/con.k_B
+# Pint = mytable['MASS_GCORR']*u.M_sun/\
+#     (mytable['RADRMS_GCORR_DECONV']*u.pc)**3*\
+#     (mytable['VRMS_GCORR_DECONV']*u.km/u.s)**2/con.k_B
 # Pint = Pint.to(u.K/(u.cm**3)).value
 
 # ax2 = axes[2]
-# im3 = ax2.scatter(mytable['RADIUS_KPC'],Pint,marker='s',cmap='Greys',color='grey',c=np.log10(mytable['MASS_EXTRAP']))
+# im3 = ax2.scatter(mytable['RADIUS_KPC'],Pint,marker='s',cmap='Greys',color='grey',c=np.log10(mytable['MASS_GCORR']))
 # ax2.set_yscale('log')
 # ax2.set_xlim([-0.5,6])
 # ax2.set_xlabel(r'$R_{\mathrm{gal}}\ (\mathrm{kpc})$')
