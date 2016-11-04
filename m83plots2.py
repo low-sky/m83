@@ -14,13 +14,13 @@ print(mygalaxy)
 
 mytable=Table.read('/home/pafreema/Documents/m83.co10.K_props_clfind.fits')
 
-idx = np.where(np.isfinite(mytable['VIRMASS_EXTRAP_DECONV'])) #removes values that are infinite/NaN
+idx = np.where(np.isfinite(mytable['VIRMASS_GCORR_DECONV'])) #removes values that are infinite/NaN
 
 rgal=mygalaxy.radius(ra=(mytable['XPOS'][idx]), dec=(mytable['YPOS'][idx]))
 #print rgal #get radii in parsecs
 
-sigma=(mytable['VRMS_EXTRAP_DECONV'][idx])/np.sqrt((mytable['RADRMS_EXTRAP_DECONV'][idx])**2) #sigma naught
-dens=(mytable['MASS_EXTRAP'][idx])/(np.pi*((mytable['RADRMS_EXTRAP_DECONV'][idx])**2)) #mass density
+sigma=(mytable['VRMS_GCORR_DECONV'][idx])/np.sqrt((mytable['RADRMS_GCORR_DECONV'][idx])**2) #sigma naught
+dens=(mytable['MASS_GCORR'][idx])/(np.pi*((mytable['RADRMS_GCORR_DECONV'][idx])**2)) #mass density
 
 m,b=np.polyfit(np.log(dens),np.log(sigma),1)
 x=np.linspace(10,10e4,100)

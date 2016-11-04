@@ -36,10 +36,10 @@ table=Table(names=column_names, dtype=column_types)
 
 for inneredge, outeredge in zip(inneredge, outeredge):
     idx=np.where((t['RADIUS_PC']>=inneredge)&(t['RADIUS_PC']<outeredge))
-    mass=t['MASS_EXTRAP'][idx].data
+    mass=t['MASS_GCORR'][idx].data
     #don't have to create an index for the xmin mass - defined in the fit_subset
     fit=powerlaw.Fit(mass)
-    fit_subset=powerlaw.Fit(mass, xmin=3e5)
+    fit_subset=powerlaw.Fit(mass, xmin=4e5)
     R,p=fit_subset.distribution_compare('power_law', 'truncated_power_law')
     table.add_row()
     table[-1]['Inner edge (pc)']=inneredge
@@ -49,7 +49,7 @@ for inneredge, outeredge in zip(inneredge, outeredge):
     table[-1]['p']=p
     table[-1]['Truncation mass (M$_\odot$)']=1/fit_subset.truncated_power_law.parameter2
     table[-1]['Largest cloud (M$_\odot$)']=mass.max()
-    table[-1]['5th largest cloud (M$_\odot$)']=np.sort(t['MASS_EXTRAP'][idx])[-5]
+    table[-1]['5th largest cloud (M$_\odot$)']=np.sort(t['MASS_GCORR'][idx])[-5]
 
     print(table)
     #print(-fit.alpha, -fit_subset.alpha, R, p, 1/fit_subset.truncated_power_law.parameter2)
