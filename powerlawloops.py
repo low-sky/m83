@@ -39,7 +39,7 @@ for inneredge, outeredge in zip(inneredge, outeredge):
     mass=t['MASS_GCORR'][idx].data
     #don't have to create an index for the xmin mass - defined in the fit_subset
     fit=powerlaw.Fit(mass)
-    fit_subset=powerlaw.Fit(mass, xmin=4e5)
+    fit_subset=powerlaw.Fit(mass, xmin=5e5)
     R,p=fit_subset.distribution_compare('power_law', 'truncated_power_law')
     table.add_row()
     table[-1]['Inner edge (pc)']=inneredge
