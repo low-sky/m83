@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import powerlaw
 from galaxies import Galaxy
 import astropy.units as u
-
+import plfit_adstat as plf
 #get info about m83
 mygalaxy=Galaxy("M83")
 print(mygalaxy)
@@ -38,6 +38,8 @@ for inneredge, outeredge in zip(inneredge, outeredge):
     idx=np.where((t['RADIUS_PC']>=inneredge)&(t['RADIUS_PC']<outeredge))
     mass=t['MASS_GCORR'][idx].data
     #don't have to create an index for the xmin mass - defined in the fit_subset
+    sampler = plf.plfit_emcee(mass, xmin = 4e5)
+    import pdb; pdb.set_trace()
     fit=powerlaw.Fit(mass)
     fit_subset=powerlaw.Fit(mass, xmin=5e5)
     R,p=fit_subset.distribution_compare('power_law', 'truncated_power_law')
@@ -53,5 +55,5 @@ for inneredge, outeredge in zip(inneredge, outeredge):
 
     print(table)
     #print(-fit.alpha, -fit_subset.alpha, R, p, 1/fit_subset.truncated_power_law.parameter2)
-    
+
 table.write('m83bininfo.fits', overwrite=True)
