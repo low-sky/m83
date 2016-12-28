@@ -1,6 +1,38 @@
 import numpy as np
 import scipy.optimize as opt
 import emcee
+from mpmath import gammainc, mpf
+from numpy import vectorize
+gammainc = vectorize(gammainc)
+mpfv = vectorize(mpf)
+
+
+def cdf_truncpl(x, alpha=-1.0, xmin=1, xmax=np.inf):
+    xvals = np.sort(x) / xmax
+    xvals = mpfv(xvals.tolist())
+    cdf_theoretical = 1 - gammainc(alpha, a=xvals) /\
+        gammainc(alpha, a=(xmin / xmax))
+    return(cdf_theoretical.astype('float'))
+
+
+def adstat_trunc(pvec, data):
+    alpha = pvec[0]
+    xmax = 1e1**pvec[1]
+#    xmin = 1.0
+    sorted_xvals = np.sort(data)
+    npts = np.float(len(sorted_xvals))
+    cdf_theoretical = np.zeros_like(sorted_xvals)
+#    for idx, elt in enumerate(sorted_xvals):
+#        cdf_theoretical[idx] = 1 - gammainc(alpha, elt / xmax) /\
+#            gammainc(alpha, (xmin / xmax))
+    cdf_theoretical = cdf_truncpl(sorted_xvals, alpha=alpha, xmax=xmax)
+    cdf_empirical = 1 - np.linspace(1 / npts / 2,
+                                    1 - 1 / npts / 2, npts)
+    adstat = len(sorted_xvals) * \
+        np.sum((cdf_empirical - cdf_theoretical)**2 /
+               (cdf_theoretical * (1 - cdf_theoretical)))
+    print (alpha, xmax, adstat)
+    return(adstat)
 
 
 def adstat_bounded(pvec, data):
@@ -37,9 +69,9 @@ def pareto_rng(n=500, xmin=1.0, xmax=10.0, alpha=1.0):
 
 def plfit_adstat(indata, xmin=1.0):
     data = indata / xmin  # Normalize to range
-    result = opt.minimize(adstat_bounded,
-                          np.array([1.0, np.log10(data.max()) + 0.1]),
-                          bounds=[(0.5, 1.5),
+    result = opt.minimize(adstat_trunc,
+                          np.array([-1.0, np.log10(data.max()) + 0.1]),
+                          bounds=[(-1.5, -0.3),
                                   (np.log10(data.max()),
                                    np.log10(data.max()) + 2)],
                           args=(data),
@@ -53,7 +85,7 @@ def logprob_plfit(pvec, data):
         return(-np.inf)
     if (pvec[1] > 20):
         return(-np.inf)
-    adstat = adstat_bounded(pvec, data)
+    adstat = adstat_trunc(pvec, data)
     logprob = -4 * ((np.log(adstat / data.size) + 0.25)**2 / 2 / 0.67**2)
     return logprob
 

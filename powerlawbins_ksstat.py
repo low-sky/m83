@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 from galaxies import Galaxy
 import astropy.units as u
 import matplotlib as mpl
-import plfit_adstat as plf
+import plfit_mcstat as plf
+import scipy.stats as ss
 mpl.rcParams['font.family']='serif'
 mpl.rcParams['font.serif'] = 'Times New Roman'
 mpl.rcParams['font.size']=12
@@ -53,7 +54,21 @@ edge_out = np.array([450, 2300, 3200, 3900, 4500, 10000])
 
 t = Table(names=['Rmin', 'Rmax', 'R_tpl', 'p_tpl', 'index',
                  'index_tpl', 'Mtrunc_tpl', 'R_sch', 'p_sch',
-                 'Mtrunc_sch', 'M1', 'M5', 'Mean5'])
+                 'Mtrunc_sch', 'M1', 'M5', 'Mean5',
+                 'index_bound', 'Mtrun_bound',
+                 'index_purepl', 'Mtrun_purepl',
+                 'index_trunc', 'Mtrun_trunc',
+                 'index_sch', 'Mtrun_sch',
+                 'index15_bound', 'index85_bound',
+                 'Mtrun15_bound', 'Mtrun85_bound',
+                 'index15_sch', 'index85_sch',
+                 'Mtrun15_sch', 'Mtrun85_sch',
+                 'index15_purepl', 'index85_purepl',
+                 'Mtrun15_purepl', 'Mtrun85_purepl',
+                 'index15_trunc', 'index85_trunc',
+                 'Mtrun15_trunc', 'Mtrun85_trunc',
+                 'pkprob_purepl', 'pkprob_sch',
+                 'pkprob_trunc', 'pkprob_bound'])
 
 fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(8.5, 5.0))
 # fig.subplots_adjust(wspace=0.3, bottom=0.2, right=0.85)
@@ -63,28 +78,17 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
     subset = (tin['MASS_GCORR'] > 3e5) * (tin['RGAL_PC'] <= outs) *\
         (tin['RGAL_PC'] > ins)
     tt = tin[subset]
-    mass = np.sort(tt['MASS_GCORR'].data)[::-1]
-    minmass = np.max([minmass_global, mass.min()])
+    mass = np.sort(tt['MASS_GCORR'].data)
+    minmass = np.max([minmass_global])
+    mass = mass[mass > minmass_global]
 #    fit = powerlaw.Fit(mass, xmin=minmass, discrete=True)
 #    fit=powerlaw.Fit(mass, discrete=True)
 #    R1, p1 = fit.distribution_compare('power_law', 'truncated_power_law')
 #    R2, p2 = fit.distribution_compare('power_law', 'schechter')
 #    R3, p3 = fit.distribution_compare('schechter', 'truncated_power_law')
-    optresult = plf.plfit_adstat(mass / minmass)
-    pvec = optresult.x
-
     t.add_row()
     t[-1]['Rmin'] = ins
     t[-1]['Rmax'] = outs
-#    t[-1]['R_tpl'] = R1
-#    t[-1]['p_tpl'] = p1
-#    t[-1]['R_sch'] = R3
-#    t[-1]['p_sch'] = p3
-    t[-1]['index'] = pvec[0]
-    t[-1]['Mtrunc_tpl'] = pvec[1] * minmass
-#    t[-1]['index_tpl'] = fit.truncated_power_law.parameter1
-#    t[-1]['Mtrunc_tpl'] = 1 / fit.truncated_power_law.parameter2
-#    t[-1]['Mtrunc_sch'] = 1 / fit.schechter.parameter1
     t[-1]['M1'] = mass[0]
     try:
         t[-1]['M5'] = mass[4]
@@ -92,11 +96,66 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
         t[-1]['M5'] = np.nan
     t[-1]['Mean5'] = np.exp(np.mean(np.log(mass[0:5])))
 
-    ax.loglog(mass[::-1], np.linspace(1, 1.0 / mass.size, mass.size),
-              drawstyle='steps')
+    for type in ['bound', 'sch', 'purepl', 'trunc']:
+        print type
+        optresult = plf.plfit_ksstat(mass / minmass, type=type, method='ks')
+        sampler = plf.plfit_emcee(mass / minmass, type=type, method='ks')
+        pvec = optresult.x
+
+#    pvec = np.array([-0.7, 1.2])
+        t[-1]['index_' + type] = pvec[0]
+        t[-1]['index15_' + type] = ss.scoreatpercentile(
+            sampler.flatchain[:, 0], 15)
+        t[-1]['index85_' + type] = ss.scoreatpercentile(
+            sampler.flatchain[:, 0], 85)
+        t[-1]['Mtrun_' + type] = 1e1**pvec[1] * minmass
+        t[-1]['Mtrun15_' + type] = 1e1**(ss.scoreatpercentile(
+                sampler.flatchain[:, 1], 15)
+                                         ) * minmass
+        t[-1]['Mtrun85_' + type] = 1e1**(ss.scoreatpercentile(
+                sampler.flatchain[:, 1], 85)
+                                 ) * minmass
+        t[-1]['pkprob_' + type] = plf.logprob_plfit(optresult.x,
+                                                    mass / minmass,
+                                                    type=type, method='ks')
+#    import pdb; pdb.set_trace()
+
+#    t[-1]['index_tpl'] = fit.truncated_power_law.parameter1
+#    t[-1]['Mtrunc_tpl'] = 1 / fit.truncated_power_law.parameter2
+#    t[-1]['Mtrunc_sch'] = 1 / fit.schechter.parameter1
+
     mtrun = (pvec[1] * minmass)
-    ccdf = plf.cdf_truncpl(mass/minmass, alpha=pvec[0], xmax=pvec[1])
-    ax.plot(mass, ccdf)
+    ntrials = 20
+    for i in range(ntrials):
+        idx = np.round(np.random.rand(1) *
+                       sampler.flatchain.shape[0]).astype('int')
+        params = (sampler.flatchain[idx, :])[0]
+        if type == 'trunc':
+            ccdf = 1 - plf.cdf_truncpl(mass / minmass,
+                                       params[0], 1, 1e1**params[1])
+        if type == 'bound':
+            ccdf = 1 - plf.cdf_boundpl(mass / minmass,
+                                       params[0], 1, 1e1**params[1])
+        if type == 'purepl':
+            ccdf = 1 - plf.cdf_truncpl(mass / minmass,
+                                       params[0], 1, 1e20)
+        if type == 'sch':
+            ccdf = 1 - plf.cdf_truncpl(mass / minmass,
+                                       -0.999, 1, 1e1**params[1])
+
+        ax.plot(mass, ccdf, alpha=0.25, lw=1.5, color='gray')
+    if type == 'trunc':
+        ccdf = 1 - plf.cdf_truncpl(mass / minmass, pvec[0], 1, 1e1**pvec[1])
+    if type == 'purepl':
+        ccdf = 1 - plf.cdf_truncpl(mass / minmass, pvec[0], 1, 1e20)
+    if type == 'sch':
+        ccdf = 1 - plf.cdf_truncpl(mass / minmass, -0.999, 1, 1e1**pvec[1])
+    if type == 'bound':
+        ccdf = 1 - plf.cdf_boundpl(mass / minmass, pvec[0], 1, 1e1**pvec[1])
+    ax.loglog(mass, np.linspace(1, 1.0 / mass.size, mass.size),
+              drawstyle='steps', color='blue')
+    ax.plot(mass, ccdf, color='red')
+
 #    fit.truncated_power_law.plot_ccdf(ax=ax, label='Trunc. Power Law')
 #    fit.power_law.plot_ccdf(ax=ax, label='Power Law', linestyle='--')
 #    fit.plot_ccdf(ax=ax, drawstyle='steps', label='Data')
