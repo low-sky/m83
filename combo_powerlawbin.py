@@ -57,14 +57,14 @@ apix = (hdr['CDELT2'] * np.pi / 180 * 4.8e6 / 1e3)**2 *\
     np.cos(mygalaxy.inclination)
 shapearray = ['o', '+', 's', 'x', 'd']
 for ins,outs,shape in zip(edges[0:-1],edges[1:],shapearray):
-    subset = (t['MASS_EXTRAP']>3e5)*(t['RGAL_PC']<=outs)*(t['RGAL_PC']>ins)
+    subset = (t['MASS_GCORR']>3e5)*(t['RGAL_PC']<=outs)*(t['RGAL_PC']>ins)
     tt = t[subset]
-    mass = tt['MASS_EXTRAP'].data
+    mass = tt['MASS_GCORR'].data
     area = np.sum((rgal_img>ins)*(rgal_img)<=outs)*apix
 
     plt.loglog(np.sort(mass),np.linspace(len(mass),1,len(mass))/area,
                label=r'${0:2.1f}<R_g/\rm kpc<{1:2.1f}$'.format(ins/1e3,outs/1e3),marker=shape)
-plt.legend(fontsize=9,loc='lower right',numpoints=2)
+plt.legend(fontsize=9,loc='lower left',numpoints=2)
 plt.xlabel(r'$M\ (M_{\odot})$')
 plt.ylabel(r'$n(M^\prime>M)\ (\mathrm{kpc}^{-2})$')
 plt.ylim(1e-2,2e2)
@@ -75,10 +75,10 @@ plt.savefig('m83_massdist.pdf')
 # #print(t)
 
 # #fit for the whole galaxy
-# mass=t['MASS_EXTRAP'].data
+# mass=t['MASS_GCORR'].data
 # myfit=powerlaw.Fit(mass)
-# idx=np.where(t['MASS_EXTRAP']>3e5)
-# mass_subset=t['MASS_EXTRAP'][idx].data
+# idx=np.where(t['MASS_GCORR']>3e5)
+# mass_subset=t['MASS_GCORR'][idx].data
 # myfit_subset=powerlaw.Fit(mass_subset, xmin=3e5)
 # R,p=myfit_subset.distribution_compare('power_law', 'truncated_power_law')
 
@@ -86,12 +86,12 @@ plt.savefig('m83_massdist.pdf')
 
 # #index the file so you get clouds within a certain radius
 # idx_1=np.where(t['RADIUS_PC']<450)
-# idxmass_1=np.where((t['MASS_EXTRAP']>3e5)&(t['RADIUS_PC']<450))
+# idxmass_1=np.where((t['MASS_GCORR']>3e5)&(t['RADIUS_PC']<450))
 
 # #pull out the mass variable and fit it
-# massdisk1=t['MASS_EXTRAP'][idx_1].data
+# massdisk1=t['MASS_GCORR'][idx_1].data
 # fit_1=powerlaw.Fit(massdisk1)
-# massdisk1_subset=t['MASS_EXTRAP'][idxmass_1].data
+# massdisk1_subset=t['MASS_GCORR'][idxmass_1].data
 # fit_1_subset=powerlaw.Fit(massdisk1_subset, xmin=3e5)
 
 
@@ -122,11 +122,11 @@ plt.savefig('m83_massdist.pdf')
 # #plot bin 2
 
 # idx_2=np.where((t['RADIUS_PC']>450)&(t['RADIUS_PC']<2300))
-# idxmass_2=np.where((t['MASS_EXTRAP']>3e5)&(t['RADIUS_PC']>450)&(t['RADIUS_PC']<2300))
+# idxmass_2=np.where((t['MASS_GCORR']>3e5)&(t['RADIUS_PC']>450)&(t['RADIUS_PC']<2300))
 
-# massdisk2_subset=t['MASS_EXTRAP'][idxmass_2].data
+# massdisk2_subset=t['MASS_GCORR'][idxmass_2].data
 # fit_2_subset=powerlaw.Fit(massdisk2_subset, xmin=3e5)
-# massdisk2=t['MASS_EXTRAP'][idx_2].data
+# massdisk2=t['MASS_GCORR'][idx_2].data
 # fit_2=powerlaw.Fit(massdisk2)
 
 # R2,p2=fit_2_subset.distribution_compare('power_law', 'truncated_power_law')
@@ -146,12 +146,12 @@ plt.savefig('m83_massdist.pdf')
 # #plot bin 3
 
 # idx_3=np.where((t['RADIUS_PC']>2300)&(t['RADIUS_PC']<3200))
-# idxmass_3=np.where((t['MASS_EXTRAP']>3e5)&(t['RADIUS_PC']>2300)&(t['RADIUS_PC']<3200))
+# idxmass_3=np.where((t['MASS_GCORR']>3e5)&(t['RADIUS_PC']>2300)&(t['RADIUS_PC']<3200))
 
-# massdisk3_subset=t['MASS_EXTRAP'][idxmass_3].data
+# massdisk3_subset=t['MASS_GCORR'][idxmass_3].data
 # fit_3_subset=powerlaw.Fit(massdisk3_subset, xmin=3e5)
 
-# massdisk3=t['MASS_EXTRAP'][idx_3].data
+# massdisk3=t['MASS_GCORR'][idx_3].data
 # fit_3=powerlaw.Fit(massdisk3)
 
 
@@ -168,12 +168,12 @@ plt.savefig('m83_massdist.pdf')
 # #plot bin 4
 
 # idx_4=np.where((t['RADIUS_PC']>3200)&(t['RADIUS_PC']<3900))
-# idxmass_4=np.where((t['MASS_EXTRAP']>3e5)&(t['RADIUS_PC']>3200)&(t['RADIUS_PC']<3900))
+# idxmass_4=np.where((t['MASS_GCORR']>3e5)&(t['RADIUS_PC']>3200)&(t['RADIUS_PC']<3900))
 
-# massdisk4_subset=t['MASS_EXTRAP'][idxmass_4].data
+# massdisk4_subset=t['MASS_GCORR'][idxmass_4].data
 # fit_4_subset=powerlaw.Fit(massdisk4_subset, xmin=3e5)
 
-# massdisk4=t['MASS_EXTRAP'][idx_4].data
+# massdisk4=t['MASS_GCORR'][idx_4].data
 # fit_4=powerlaw.Fit(massdisk4)
 
 
@@ -191,12 +191,12 @@ plt.savefig('m83_massdist.pdf')
 # #plot bin 5
 
 # idx_5=np.where((t['RADIUS_PC']>3900)&(t['RADIUS_PC']<4500))
-# idxmass_5=np.where((t['MASS_EXTRAP']>3e5)&(t['RADIUS_PC']>3900)&(t['RADIUS_PC']<4500))
+# idxmass_5=np.where((t['MASS_GCORR']>3e5)&(t['RADIUS_PC']>3900)&(t['RADIUS_PC']<4500))
 
-# massdisk5_subset=t['MASS_EXTRAP'][idxmass_5].data
+# massdisk5_subset=t['MASS_GCORR'][idxmass_5].data
 # fit_5_subset=powerlaw.Fit(massdisk5_subset, xmin=3e5)
 
-# massdisk5=t['MASS_EXTRAP'][idx_5].data
+# massdisk5=t['MASS_GCORR'][idx_5].data
 # fit_5=powerlaw.Fit(massdisk5)
 
 # R5,p5=fit_5_subset.distribution_compare('power_law', 'truncated_power_law')

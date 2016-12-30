@@ -24,8 +24,8 @@ print(mygalaxy)
 #load fits file
 tin = Table.read('m83.co10.K_props_clfind.fits')
 
-minmass_global = 4e5
-minmass = 4e5
+minmass_global = 4.6e5
+minmass = 4.6e5
 # find cloud's galactocentric distance
 rgal = mygalaxy.radius(ra=(tin['XPOS']), dec=(tin['YPOS']))
 # fit1,fit2 = 'truncated_power_law','schechter'
@@ -55,6 +55,7 @@ edge_out = np.array([450, 2300, 3200, 3900, 4500, 10000])
 t = Table(names=['Rmin', 'Rmax', 'R_tpl', 'p_tpl', 'index',
                  'index_tpl', 'Mtrunc_tpl', 'R_sch', 'p_sch',
                  'Mtrunc_sch', 'M1', 'M5', 'Mean5',
+                 'Ncloud','Ncloudfit',
                  'index_bound', 'Mtrun_bound',
                  'index_purepl', 'Mtrun_purepl',
                  'index_trunc', 'Mtrun_trunc',
@@ -75,7 +76,7 @@ fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(8.5, 5.0))
 bin = np.arange(len(axes.flatten()))
 
 for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
-    subset = (tin['MASS_GCORR'] > 3e5) * (tin['RGAL_PC'] <= outs) *\
+    subset = (tin['MASS_GCORR'] > 0) * (tin['RGAL_PC'] <= outs) *\
         (tin['RGAL_PC'] > ins)
     tt = tin[subset]
     mass = np.sort(tt['MASS_GCORR'].data)
@@ -87,19 +88,21 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
 #    R2, p2 = fit.distribution_compare('power_law', 'schechter')
 #    R3, p3 = fit.distribution_compare('schechter', 'truncated_power_law')
     t.add_row()
+    t[-1]['Ncloud'] = np.sum(subset)
+    t[-1]['Ncloudfit'] = len(mass)
     t[-1]['Rmin'] = ins
     t[-1]['Rmax'] = outs
-    t[-1]['M1'] = mass[0]
+    t[-1]['M1'] = mass[-1]
     try:
-        t[-1]['M5'] = mass[4]
+        t[-1]['M5'] = mass[-5]
     except IndexError:
         t[-1]['M5'] = np.nan
-    t[-1]['Mean5'] = np.exp(np.mean(np.log(mass[0:5])))
+    t[-1]['Mean5'] = np.exp(np.mean(np.log(mass[-5:-1])))
 
-    for type in ['bound', 'sch', 'purepl', 'trunc']:
+    for type in ['sch', 'purepl', 'trunc']:
         print type
-        optresult = plf.plfit_ksstat(mass / minmass, type=type, method='ks')
-        sampler = plf.plfit_emcee(mass / minmass, type=type, method='ks')
+        optresult = plf.plfit_ksstat(mass / minmass, type=type, method='ad')
+        sampler = plf.plfit_emcee(mass / minmass, type=type, method='ad')
         pvec = optresult.x
 
 #    pvec = np.array([-0.7, 1.2])
@@ -117,7 +120,7 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
                                  ) * minmass
         t[-1]['pkprob_' + type] = plf.logprob_plfit(optresult.x,
                                                     mass / minmass,
-                                                    type=type, method='ks')
+                                                    type=type, method='ad')
 #    import pdb; pdb.set_trace()
 
 #    t[-1]['index_tpl'] = fit.truncated_power_law.parameter1
@@ -152,9 +155,9 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
         ccdf = 1 - plf.cdf_truncpl(mass / minmass, -0.999, 1, 1e1**pvec[1])
     if type == 'bound':
         ccdf = 1 - plf.cdf_boundpl(mass / minmass, pvec[0], 1, 1e1**pvec[1])
+    ax.plot(mass, ccdf, color='red', lw=2)
     ax.loglog(mass, np.linspace(1, 1.0 / mass.size, mass.size),
               drawstyle='steps', color='blue')
-    ax.plot(mass, ccdf, color='red')
 
 #    fit.truncated_power_law.plot_ccdf(ax=ax, label='Trunc. Power Law')
 #    fit.power_law.plot_ccdf(ax=ax, label='Power Law', linestyle='--')
@@ -173,6 +176,7 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
         ax.set_xlabel(r'Mass ($M_{\odot}$)')
     ax.text(4e5, 1e-2, r'${0:2.1f}<R_g/\rm kpc<{1:2.1f}$'.format(
             ins / 1e3, outs / 1e3),fontsize=9)
+t.write('plfit.fits', overwrite=True)
 plt.tight_layout()
 plt.savefig('pldists.pdf')
 

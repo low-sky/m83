@@ -8,6 +8,7 @@ import scipy.special as scispec
 gammainc = vectorize(gammainc)
 mpfv = vectorize(mpf)
 
+sf = 1.0
 
 def gammaincplus2(s, x):
     vals = scispec.gamma(s + 2) * scispec.gammaincc(s + 2, x)
@@ -102,7 +103,28 @@ def adstat_bounded(pvec, data, returnlnprob=False):
                                 0.25)**2 / 2 / 0.67**2
         if adstat < 0:
             return(-np.inf)
-        return(-adstat / 2)
+        return(-sf * adstat / data.size)
+    return(adstat)
+
+
+def adstat_purepl(pvec, data, returnlnprob=False):
+    alpha = pvec[0]
+    xmax = 1e20
+    xmin = 1.0
+    sorted_xvals = np.sort(data)
+    npts = np.float(len(sorted_xvals))
+    cdf_theoretical = cdf_boundpl(sorted_xvals, alpha, xmin, xmax)
+    cdf_empirical = np.linspace(1 / npts / 2,
+                                1 - 1 / npts / 2, npts)
+    adstat = len(sorted_xvals) * \
+        np.sum((cdf_empirical - cdf_theoretical)**2 /
+               (cdf_theoretical * (1 - cdf_theoretical)))
+    if returnlnprob:
+        logprob = -data.size * (np.log(adstat / data.size) +
+                                0.25)**2 / 2 / 0.67**2
+        if adstat < 0:
+            return(-np.inf)
+        return(-sf * adstat / data.size)
     return(adstat)
 
 
@@ -121,7 +143,7 @@ def adstat_schechter(pvec, data, returnlnprob=False):
     if returnlnprob:
         if adstat < 0:
             return(-np.inf)
-        return(-adstat / 2)
+        return(-sf * adstat / data.size)
     return(adstat)
 
 
@@ -140,7 +162,7 @@ def adstat_trunc(pvec, data, returnlnprob=False):
     if returnlnprob:
         if np.isnan(adstat):
             return(-np.inf)
-        return(-adstat / 2)
+        return(-sf * adstat / data.size)
     return(adstat)
 
 
@@ -170,6 +192,8 @@ def plfit_ksstat(indata, xmin=1.0, type='bound', method='ks'):
             fitstat = adstat_schechter
         if type == 'trunc':
             fitstat = adstat_trunc
+        if type == 'purepl':
+            fitstat = adstat_purepl
 
     result = opt.minimize(fitstat,
                           np.array([-0.7, np.log10(data.max()) + 0.1]),
@@ -183,7 +207,7 @@ def plfit_ksstat(indata, xmin=1.0, type='bound', method='ks'):
 
 
 def logprob_plfit(pvec, data, type='bound', method='ks'):
-    if (pvec[1] > 20):
+    if (pvec[1] > 3.0):
         return(-np.inf)
     if method == 'ks':
         if type == 'bound':
@@ -202,6 +226,10 @@ def logprob_plfit(pvec, data, type='bound', method='ks'):
             logprob = adstat_bounded(pvec, data, returnlnprob=True)
         if type == 'trunc':
             logprob = adstat_trunc(pvec, data, returnlnprob=True)
+        if type == 'purepl':
+            logprob = adstat_purepl(pvec, data, returnlnprob=True)
+        if np.isnan(logprob):
+            return(-np.inf)
     return logprob
 
 
@@ -221,7 +249,8 @@ def grid_eval(indata, xmin=1.0):
         return(adstatmat, alpha, logxmax)
 
 
-def plfit_emcee(indata, xmin=1.0, type='bound', method='ks'):
+def plfit_emcee(indata, xmin=1.0, type='bound', method='ks',
+                steps=2000, thin=10):
     moddata  = indata / xmin
     opt_result = plfit_ksstat(moddata, xmin=1.0,
                               type=type, method=method)
@@ -239,6 +268,6 @@ def plfit_emcee(indata, xmin=1.0, type='bound', method='ks'):
                                                 'method': method})
         pos, prob, state = sampler.run_mcmc(p0, 200)
         sampler.reset()
-        pos, prob, state = sampler.run_mcmc(pos, 2000, thin=10)
+        pos, prob, state = sampler.run_mcmc(pos, steps, thin=thin)
 
         return sampler

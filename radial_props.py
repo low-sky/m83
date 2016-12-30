@@ -18,7 +18,7 @@ colrgal=Column(name='RADIUS_KPC',data=(rgal/1e3))
 mytable.add_column(colrgal)
 
 condition = np.ones(len(mytable),dtype=np.bool)
-condition = (mytable['MAXVAL']/mytable['NOISE']>5) & (mytable['RADRMS_GCORR_DECONV']>20)
+condition = (mytable['MAXVAL']/mytable['NOISE']>5.5) & (mytable['RADRMS_GCORR_DECONV']>20)
 idx = np.where(condition)
 mytable = mytable[idx]
 
