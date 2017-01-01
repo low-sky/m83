@@ -7,8 +7,25 @@ import scipy.stats as ss
 import scipy.special as scispec
 gammainc = vectorize(gammainc)
 mpfv = vectorize(mpf)
-
 sf = 1.0
+
+
+def empirical_cdf(xin, xmin=1, completeness=False):
+    xminmass = 3.35e5
+    completeness = True  # Override Keyword
+    sorted_xvals = np.sort(xin)
+    npts = np.float(len(sorted_xvals))
+    cdf_empirical = np.linspace(1 / npts / 2,
+                                1 - 1 / npts / 2, npts)
+    if completeness:
+        lm = np.log10(sorted_xvals * xminmass)
+# Empirical fit to the completeness function
+        compfrac = 1 / (1 + np.exp(-14.8 * (lm - 5.525)))
+        cdf_empirical /= compfrac
+        cdf_empirical = cdf_empirical / cdf_empirical.max() *\
+            (1 - 1 / npts / 2)
+    return(cdf_empirical)
+
 
 def gammaincplus2(s, x):
     vals = scispec.gamma(s + 2) * scispec.gammaincc(s + 2, x)
@@ -91,10 +108,8 @@ def adstat_bounded(pvec, data, returnlnprob=False):
     xmax = 1e1**pvec[1]
     xmin = 1.0
     sorted_xvals = np.sort(data)
-    npts = np.float(len(sorted_xvals))
     cdf_theoretical = cdf_boundpl(sorted_xvals, alpha, xmin, xmax)
-    cdf_empirical = np.linspace(1 / npts / 2,
-                                1 - 1 / npts / 2, npts)
+    cdf_empirical = empirical_cdf(data)
     adstat = len(sorted_xvals) * \
         np.sum((cdf_empirical - cdf_theoretical)**2 /
                (cdf_theoretical * (1 - cdf_theoretical)))
@@ -112,10 +127,8 @@ def adstat_purepl(pvec, data, returnlnprob=False):
     xmax = 1e20
     xmin = 1.0
     sorted_xvals = np.sort(data)
-    npts = np.float(len(sorted_xvals))
     cdf_theoretical = cdf_boundpl(sorted_xvals, alpha, xmin, xmax)
-    cdf_empirical = np.linspace(1 / npts / 2,
-                                1 - 1 / npts / 2, npts)
+    cdf_empirical = empirical_cdf(data)
     adstat = len(sorted_xvals) * \
         np.sum((cdf_empirical - cdf_theoretical)**2 /
                (cdf_theoretical * (1 - cdf_theoretical)))
@@ -133,10 +146,8 @@ def adstat_schechter(pvec, data, returnlnprob=False):
     xmax = 1e1**pvec[1]
     xmin = 1.0
     sorted_xvals = np.sort(data)
-    npts = np.float(len(sorted_xvals))
     cdf_theoretical = cdf_truncpl(sorted_xvals, alpha, xmin, xmax)
-    cdf_empirical = np.linspace(1 / npts / 2,
-                                1 - 1 / npts / 2, npts)
+    cdf_empirical = empirical_cdf(data)
     adstat = len(sorted_xvals) * \
         np.sum((cdf_empirical - cdf_theoretical)**2 /
                (cdf_theoretical * (1 - cdf_theoretical)))
@@ -152,10 +163,8 @@ def adstat_trunc(pvec, data, returnlnprob=False):
     xmax = 1e1**pvec[1]
     xmin = 1.0
     sorted_xvals = np.sort(data)
-    npts = np.float(len(sorted_xvals))
     cdf_theoretical = cdf_truncpl(sorted_xvals, alpha, xmin, xmax)
-    cdf_empirical = np.linspace(1 / npts / 2,
-                                1 - 1 / npts / 2, npts)
+    cdf_empirical = empirical_cdf(data)
     adstat = len(sorted_xvals) * \
         np.sum((cdf_empirical - cdf_theoretical)**2 /
                (cdf_theoretical * (1 - cdf_theoretical)))

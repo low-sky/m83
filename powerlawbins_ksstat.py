@@ -24,8 +24,8 @@ print(mygalaxy)
 #load fits file
 tin = Table.read('m83.co10.K_props_clfind.fits')
 
-minmass_global = 4.6e5
-minmass = 4.6e5
+minmass_global = 3.35e5
+minmass = 3.35e5
 # find cloud's galactocentric distance
 rgal = mygalaxy.radius(ra=(tin['XPOS']), dec=(tin['YPOS']))
 # fit1,fit2 = 'truncated_power_law','schechter'
@@ -130,7 +130,7 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
     mtrun = (pvec[1] * minmass)
     ntrials = 20
     for i in range(ntrials):
-        idx = np.round(np.random.rand(1) *
+        idx = np.floor(np.random.rand(1) *
                        sampler.flatchain.shape[0]).astype('int')
         params = (sampler.flatchain[idx, :])[0]
         if type == 'trunc':
@@ -156,7 +156,8 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
     if type == 'bound':
         ccdf = 1 - plf.cdf_boundpl(mass / minmass, pvec[0], 1, 1e1**pvec[1])
     ax.plot(mass, ccdf, color='red', lw=2)
-    ax.loglog(mass, np.linspace(1, 1.0 / mass.size, mass.size),
+    ccdf_empirical = 1 - plf.empirical_cdf(mass / minmass, completeness=True)
+    ax.loglog(mass, ccdf_empirical,
               drawstyle='steps', color='blue')
 
 #    fit.truncated_power_law.plot_ccdf(ax=ax, label='Trunc. Power Law')

@@ -19,7 +19,7 @@ colrgal=Column(name='RGAL_PC',data=(rgal))
 mytable.add_column(colrgal)
 
 condition = np.ones(len(mytable),dtype=np.bool)
-condition = (mytable['MAXVAL']/mytable['NOISE']>5)# & (mytable['RADRMS_EXTRAP_DECONV']>20)
+condition = (mytable['MASS_GCORR']>4.6e5) # & (mytable['RADRMS_EXTRAP_DECONV']>20)
 idx = np.where(condition)
 mytable = mytable[idx]
 

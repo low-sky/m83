@@ -19,8 +19,8 @@ print(mygalaxy)
 # load fits file
 tin = Table.read('m83.co10.K_props_clfind.fits')
 
-minmass_global = 4e5
-minmass = 4e5
+minmass_global = 3.35e5
+minmass = 3.35e5
 # find cloud's galactocentric distance
 rgal = mygalaxy.radius(ra=(tin['XPOS']), dec=(tin['YPOS']))
 colrgal = Column(name='RGAL_PC', data=(rgal))
@@ -38,7 +38,7 @@ tfit = tin[tin['MASS_GCORR'] > minmass_global]
 idx = np.argsort(tfit['RGAL_PC'])
 tfit = tfit[idx]
 npts = len(tfit)
-stride = 75
+stride = 50
 mass = tfit['MASS_GCORR']
 rgvals = tfit['RGAL_PC']
 step = 25
@@ -47,7 +47,6 @@ for i in np.arange(stride, npts - stride, step):
     print i
     fitmass = np.sort(mass[(i - stride):(i + stride)])[::-1]
     rads = rgvals[(i - stride):(i + stride)]
-    minmass = 4e5
     type = 'trunc'
     optresult = plf.plfit_ksstat(fitmass / minmass, type=type, method='ks')
     sampler = plf.plfit_emcee(fitmass / minmass, type=type, method='ks',
