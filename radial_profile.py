@@ -13,22 +13,27 @@ from scipy.stats import binned_statistic
 from radio_beam import Beam
 import scipy.interpolate as interp
 from astropy.table import Table
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+mpl.rcParams['font.family'] = 'serif'
+mpl.rcParams['font.serif'] = 'Times New Roman'
+mpl.rcParams['font.size'] = 12
 
 def channelShift(x,ChanShift):
-    # Shift a spectrum by a set number of channels.  
+    # Shift a spectrum by a set number of channels.
     ftx = np.fft.fft(x)
     m = np.fft.fftfreq(len(x))
     phase = np.exp(2*np.pi*m*1j*ChanShift)
     x2 = np.real(np.fft.ifft(ftx*phase))
     return(x2)
-    
+
 def lundgren_surfdens(radius):
     # We assume that M83 is 4.8 Mpc away whereas Lundren et al. 2004
     # prefer 4.5 Mpc.  This changes radial scales but not surface
     # densities.
     drat = 4.8/4.5
     # Lundgren et al. use 2.3e20 for Xco, whereas we prefer Xco=2e20
-    xrat = 2.0/2.3 
+    xrat = 2.0/2.3
     sigma_h2 = xrat * (216*np.exp(-(radius/(drat*649*u.pc))**2)+
                        120*np.exp(-(radius/(drat*2265*u.pc))))*u.M_sun/u.pc**2
     return sigma_h2
@@ -43,28 +48,30 @@ def lundgren_vrot(radius):
     vc = vc.to(u.km/u.s)
     return vc
 
+
 def mass_scales():
     t = Table.read('m83.profiles.fits')
+    sigmav = ((t['sigma_v_hi']**2*0 + t['sigma_v_h2']**2)**0.5).data *\
+        (u.km / u.s)
+    surfdens = (t['Surfdens_HI']).data * (u.M_sun / u.pc**2) +\
+        lundgren_surfdens(t['Radius'].data * u.kpc)
+    surfdens = (t['Surfdens_HI']).data * (u.M_sun / u.pc**2) +\
+        (t['Surfdens_H2']).data * (u.M_sun / u.pc**2)
 
-    sigmav = ((t['sigma_v_hi']**2+t['sigma_v_h2']**2)**0.5).data*(u.km/u.s)
-    surfdens = (t['Surfdens_HI']).data*(u.M_sun/u.pc**2)+\
-        lundgren_surfdens(t['Radius'].data*u.kpc)
-    
 #    sigmav = np.max(np.c_[t[sigma_v_hi],t[sigma_v_h2]],axis=1)
-    M_J = (np.pi*sigmav**4/(4*con.G**2*surfdens)).to(u.M_sun)
+    M_J = (np.pi * sigmav**4 / (4 * con.G**2 * surfdens)).to(u.M_sun)
 
-    kappasq = lundgren_epicyclic(t['Radius'].data*u.kpc)
-    M_T = (4*np.pi**5*con.G**2*surfdens**3/kappasq**2).to(u.M_sun)
-    import pdb; pdb.set_trace()
-    edges = np.array([0,450,2300,3200,3900,4500])
-    for ins,outs in zip(edges[0:-1],edges[1:]):
-        idx = (t['Radius']>=ins/1e3)*(t['Radius']<outs/1e3)
-        print '{0}-{1}: Jeans = {2}, Toomre = {3}'.format(ins,outs,
-                                                          np.median(M_J[idx])/1e6,
-                                                          np.median(M_T[idx])/1e6)
-#        import pdb;pdb.set_trace()
+    kappasq = lundgren_epicyclic(t['Radius'].data * u.kpc)
+    M_T = (4 * np.pi**5 * con.G**2 * surfdens**3 / kappasq**2).to(u.M_sun)
+    edges = np.array([0, 450, 2300, 3200, 3900, 4500])
+    for ins, outs in zip(edges[0:-1], edges[1:]):
+        idx = (t['Radius'] >= ins / 1e3) * (t['Radius'] < outs / 1e3)
+        print '{0}-{1}: Jeans = {2}, Toomre = {3}'.format(
+            ins, outs,
+            np.mean(M_J[idx]) / 1e6,
+            np.mean(M_T[idx]) / 1e6)
 
-    return(M_J,M_T)
+    return(M_J, M_T)
 
 def lundgren_epicyclic(radius):
     diskmass = 6e10*u.M_sun*(4.8/4.5)
@@ -83,7 +90,7 @@ def setprogress(axes):
     return(ProgressBar(np.prod(axes)))
 
 # for M83 V_helio - 10.919938 = V_LSRK
-def cloud_veldisp(catalog ='/srv/astro/erosolo/m83/measurements/m83.co10_props_cprops.fits'):
+def cloud_veldisp(catalog ='/mnt/bigdata/erosolow/m83/measurements/m83.co10_props_cprops.fits'):
     m83 = Galaxy('M83')
     radius = Galaxy.radius(ra=t['RA'],dec=t['DEC'])
 
@@ -120,9 +127,9 @@ def ism_hidisp(momentname = '/home/erosolow/bigdata/erosolo/m83/data/NGC_5236_RO
         sigma[ctr] = (np.sum(accumspec[roi]*(vaxis[roi]-v0)**2)/np.sum(accumspec[roi]))**0.5
     return sigma
 
-    
-def ism_veldisp(momentname = '/srv/astro/erosolo/m83/data/m83.mom1.fits',
-                cubename = '/srv/astro/erosolo/m83/data/m83.co10.K_correct.fits',
+
+def ism_veldisp(momentname = '/mnt/bigdata/erosolow/m83/data/m83.mom1.fits',
+                cubename = '/mnt/bigdata/erosolow/m83/data/m83.co10.K_correct.fits',
                 dr = 0.25, nbins=100):
     sc = SpectralCube.read(cubename)
     _, dec, ra = scworld[0,:,:]
@@ -148,20 +155,20 @@ def ism_veldisp(momentname = '/srv/astro/erosolo/m83/data/m83.mom1.fits',
         for deltachan,yspec,xspec in zip(dchan,ymat[idx],xmat[idx]):
             if np.isfinite(deltachan):
                 accumspec += channelShift(sc[:,yspec,xspec],deltachan)
-        
+
         labels,_ = nd.measurements.label(accumspec>0)
         pk = np.argmax(accumspec)
         roi = (labels == labels[pk])
         v0 = np.sum(accumspec[roi]*vaxis[roi])/np.sum(accumspec[roi])
         sigma[ctr] = (np.sum(accumspec[roi]*(vaxis[roi]-v0)**2)/np.sum(accumspec[roi]))**0.5
     return sigma
-    
-def things_vrot(momentname = '/srv/astro/erosolo/m83/data/m83.mom1.fits',
+
+def things_vrot(momentname = '/mnt/bigdata/erosolow/m83/data/m83.mom1.fits',
                 dr = 0.25,nbins=100):
     m83 = Galaxy('M83')
     mom1 = fits.getdata(momentname).squeeze()
     mom1 = nd.median_filter(mom1,size=1)
-    hdr = fits.getheader(momentname) 
+    hdr = fits.getheader(momentname)
     x,y = m83.radius(header = hdr,returnXY=True)
     phi = np.arctan2(y.value,x.value)
     r = (x**2+y**2)**0.5
@@ -181,12 +188,12 @@ def things_vrot(momentname = '/srv/astro/erosolo/m83/data/m83.mom1.fits',
         vscatter[ctr] = np.nanmedian(np.abs(vrot[idx]-vprof[ctr]))*1.4826
         radprof[ctr] = np.nanmean(r[idx])
     return radprof,vprof,vscatter
-    
-def things_profile(momentname = '/srv/astro/erosolo/m83/data/NGC_5236_RO_MOM0:I:HI:wbb2008.fits',
+
+def things_profile(momentname = '/mnt/bigdata/erosolow/m83/data/NGC_5236_RO_MOM0:I:HI:wbb2008.fits',
                    dr=0.5,nbins=100):
     m83 = Galaxy('M83')
     mom0 = fits.getdata(momentname).squeeze()
-    hdr = fits.getheader(momentname) 
+    hdr = fits.getheader(momentname)
     radius = m83.radius(header = hdr)
     bm = Beam.from_fits_header(hdr)
     nurest = hdr['RESTFREQ']*u.Hz
@@ -202,7 +209,7 @@ def things_profile(momentname = '/srv/astro/erosolo/m83/data/NGC_5236_RO_MOM0:I:
         radprof[ctr] = np.nanmean(radmat[idx])
     sdprof *= np.cos(m83.inclination)*1e-3*bm.jtok(nurest)*0.019
     return radprof,sdprof
-        
+
 def alma_profile(momentname = 'm83.moment0.fits',
                  dr=0.5,nbins=100):
     m83 = Galaxy('M83')
@@ -219,9 +226,9 @@ def alma_profile(momentname = 'm83.moment0.fits',
         radprof[ctr] = np.nanmean(radmat[idx])
     sdprof *= np.cos(m83.inclination)*4.35
     return radprof, sdprof
-        
-def alma_moment0(maskname = '/srv/astro/erosolo/m83/data/m83.co10.K_mask.fits',
-                 cubename = '/srv/astro/erosolo/m83/data/m83.co10.K_correct.fits'):
+
+def alma_moment0(maskname = '/mnt/bigdata/erosolow/m83/data/m83.co10.K_mask.fits',
+                 cubename = '/mnt/bigdata/erosolow/m83/data/m83.co10.K_correct.fits'):
 
     # cube = fits.getdata(cubename)
     # header = fits.getheader(cubename)
@@ -252,8 +259,8 @@ def alma_moment0(maskname = '/srv/astro/erosolo/m83/data/m83.co10.K_mask.fits',
 def alma_mask():
     emap = fits.getdata('m83.errormap.fits')
     sm_emap = nd.median_filter(emap,footprint=morph.disk(17))
-    
-def alma_errormap(cube = '/srv/astro/erosolo/m83/data/m83.co10.K_correct.fits'):
+
+def alma_errormap(cube = '/mnt/bigdata/erosolow/m83/data/m83.co10.K_correct.fits'):
     s = SpectralCube.read(cube)
     m83 = Galaxy('M83')
     _,dec,ra = s.world[0,:,:]
@@ -272,3 +279,36 @@ def alma_errormap(cube = '/srv/astro/erosolo/m83/data/m83.co10.K_correct.fits'):
     emap*=1.4826 # convert to rms scales
     hdu = fits.PrimaryHDU(emap,header=s.header)
     hdu.writeto('m83.errormap.fits',clobber=True)
+
+
+def profile_plot():
+    t = Table.read('m83.profiles.fits')
+    fig, (ax1, ax2, ax3) = plt.subplots(nrows=3,
+                                        ncols=1, figsize=(4.25, 5),
+                                        sharex = True)
+    radius = t['Radius']
+    ax1.plot(radius, t['Surfdens_HI'], label='HI')
+    ax1.plot(radius, t['Surfdens_H2'], label=r'H$_2$')
+    ax1.plot(radius, t['Surfdens_H2'] + t['Surfdens_HI'],
+             label='Total')
+    ax1.plot(radius, lundgren_surfdens(radius),
+             label='L04')
+    ax1.set_yscale('log')
+    ax1.legend(loc='upper right')
+
+    ax2.plot(radius, t['Vrot'])
+    ax2.plot(radius, lundgren_vrot(radius))
+    ax2.fill_between(radius,  t['Vrot'] - t['V_scatter'] / 2,
+                     t['Vrot'] + t['V_scatter'] / 2, alpha=0.3, color='gray')
+    sigmav = np.zeros(len(radius))
+    idx = t['sigma_v_hi'] > t['sigma_v_h2']
+    sigmav[t['sigma_v_hi'] > t['sigma_v_h2']] = t[idx]['sigma_v_hi']
+    idx = t['sigma_v_hi'] < t['sigma_v_h2']
+    sigmav[t['sigma_v_hi'] < t['sigma_v_h2']] = t[idx]['sigma_v_h2']
+    sigmav = (t['sigma_v_h2']**2 + t['sigma_v_hi']**2)**0.5
+    ax3.plot(radius, t['sigma_v_h2'])
+
+    fig.tight_layout()
+    fig.savefig('radial_profile.pdf')
+    plt.close(fig)
+    plt.clf()

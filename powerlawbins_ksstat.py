@@ -108,15 +108,15 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
 #    pvec = np.array([-0.7, 1.2])
         t[-1]['index_' + type] = pvec[0]
         t[-1]['index15_' + type] = ss.scoreatpercentile(
-            sampler.flatchain[:, 0], 15)
+            sampler.flatchain[:, 0], 16)
         t[-1]['index85_' + type] = ss.scoreatpercentile(
-            sampler.flatchain[:, 0], 85)
+            sampler.flatchain[:, 0], 84)
         t[-1]['Mtrun_' + type] = 1e1**pvec[1] * minmass
         t[-1]['Mtrun15_' + type] = 1e1**(ss.scoreatpercentile(
-                sampler.flatchain[:, 1], 15)
+                sampler.flatchain[:, 1], 16)
                                          ) * minmass
         t[-1]['Mtrun85_' + type] = 1e1**(ss.scoreatpercentile(
-                sampler.flatchain[:, 1], 85)
+                sampler.flatchain[:, 1], 84)
                                  ) * minmass
         t[-1]['pkprob_' + type] = plf.logprob_plfit(optresult.x,
                                                     mass / minmass,
