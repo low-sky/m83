@@ -51,16 +51,21 @@ def lundgren_vrot(radius):
 
 def mass_scales():
     t = Table.read('m83.profiles.fits')
-    sigmav = ((t['sigma_v_hi']**2*0 + t['sigma_v_h2']**2)**0.5).data *\
+    # Vel. dispersions in quadrature
+    sigmav = ((t['sigma_v_hi']**2 + t['sigma_v_h2']**2)**0.5).data *\
         (u.km / u.s)
+    # Vel dispersions = max
+    #    sigmav = np.max(np.c_[t[sigma_v_hi],t[sigma_v_h2]],axis=1)
+
+    # Single dish surface densities
     surfdens = (t['Surfdens_HI']).data * (u.M_sun / u.pc**2) +\
         lundgren_surfdens(t['Radius'].data * u.kpc)
-    surfdens = (t['Surfdens_HI']).data * (u.M_sun / u.pc**2) +\
-        (t['Surfdens_H2']).data * (u.M_sun / u.pc**2)
 
-#    sigmav = np.max(np.c_[t[sigma_v_hi],t[sigma_v_h2]],axis=1)
+    # ALMA Surface densities
+    #surfdens = (t['Surfdens_HI']).data * (u.M_sun / u.pc**2) +\
+    #    (t['Surfdens_H2']).data * (u.M_sun / u.pc**2)
+
     M_J = (np.pi * sigmav**4 / (4 * con.G**2 * surfdens)).to(u.M_sun)
-
     kappasq = lundgren_epicyclic(t['Radius'].data * u.kpc)
     M_T = (4 * np.pi**5 * con.G**2 * surfdens**3 / kappasq**2).to(u.M_sun)
     edges = np.array([0, 450, 2300, 3200, 3900, 4500])
