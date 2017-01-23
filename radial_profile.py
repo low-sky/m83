@@ -99,10 +99,13 @@ def ism_hidisp(momentname = '/mnt/bigdata/erosolow/erosolo/m83/data/NGC_5236_RO_
                dr = 0.25, nbins=100):
 
     s = SpectralCube.read(cubename)
+    s = s[0:-10,:,:]
     mom1 = fits.getdata(momentname)/1e3
     m83 = Galaxy('M83')
     radius = m83.radius(header=s.header)
-    channel = np.interp(mom1.squeeze().ravel(),s.spectral_axis.value,np.arange(s.shape[0]))
+    channel = np.interp(mom1.squeeze().ravel(),
+                        (s.spectral_axis.value/1e3)[::-1],
+                        (np.arange(s.shape[0]))[::-1])
 #    intfunc = interp.interp1d(s.spectral_axis.value,np.arange(s.shape[0]),bounds_error = False)
 #    channel = intfunc(mom1.squeeze().ravel())
     channel.shape = s.shape[1:]
@@ -118,7 +121,7 @@ def ism_hidisp(momentname = '/mnt/bigdata/erosolow/erosolo/m83/data/NGC_5236_RO_
 
         for deltachan,yspec,xspec in zip(dchan,ymat[idx],xmat[idx]):
             if np.isfinite(deltachan):
-                accumspec += channelShift(s[:,yspec,xspec],deltachan)
+                accumspec += channelShift(s[:,yspec,xspec], deltachan)
         # import pdb; pdb.set_trace()
         labels,_ = nd.measurements.label(accumspec>0)
         pk = np.argmax(accumspec)
@@ -137,8 +140,12 @@ def ism_veldisp(momentname = '/mnt/bigdata/erosolow/erosolo/m83/data/m83.mom1.fi
 #    mom1 = nd.generic_filter(mom1,np.nanmedian,size=1)
     wcs_mom1 = wcs.WCS(momentname)
     xvals, yvals = wcs_mom1.celestial.wcs_world2pix(ra,dec,0)
-    vvals = nd.interpolation.map_coordinates(mom1.squeeze(),[yvals.ravel(),xvals.ravel()],order=1)*u.m/u.s
-    intfunc = interp.interp1d(sc.spectral_axis.value,np.arange(scshape[0]),bounds_error = False)
+    vvals = nd.interpolation.map_coordinates(mom1.squeeze(),
+                                             [yvals.ravel(),
+                                              xvals.ravel()],
+                                             order=1)*u.m/u.s
+    intfunc = interp.interp1d(sc.spectral_axis.value,np.arange(sc.shape[0]),
+                              bounds_error = False)
     channel = intfunc(vvals.to(u.km/u.s).value-10.919938)
     channel.shape = sc.shape[1:]
     m83 = Galaxy('M83')
