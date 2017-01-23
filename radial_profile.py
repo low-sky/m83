@@ -90,12 +90,12 @@ def setprogress(axes):
     return(ProgressBar(np.prod(axes)))
 
 # for M83 V_helio - 10.919938 = V_LSRK
-def cloud_veldisp(catalog ='/mnt/bigdata/erosolow/m83/measurements/m83.co10_props_cprops.fits'):
+def cloud_veldisp(catalog ='/mnt/bigdata/erosolow/erosolo/m83/measurements/m83.co10_props_cprops.fits'):
     m83 = Galaxy('M83')
     radius = Galaxy.radius(ra=t['RA'],dec=t['DEC'])
 
-def ism_hidisp(momentname = '/home/erosolow/bigdata/erosolo/m83/data/NGC_5236_RO_MOM1:I:HI:wbb2008.fits',
-               cubename = '/home/erosolow/bigdata/erosolo/m83/data/NGC_5236_RO_CUBE:I:HI:wbb2008.fits',
+def ism_hidisp(momentname = '/mnt/bigdata/erosolow/erosolo/m83/data/NGC_5236_RO_MOM1:I:HI:wbb2008.fits',
+               cubename = '/mnt/bigdata/erosolow/erosolo/m83/data/NGC_5236_RO_CUBE:I:HI:wbb2008.fits',
                dr = 0.25, nbins=100):
 
     s = SpectralCube.read(cubename)
@@ -128,11 +128,11 @@ def ism_hidisp(momentname = '/home/erosolow/bigdata/erosolo/m83/data/NGC_5236_RO
     return sigma
 
 
-def ism_veldisp(momentname = '/mnt/bigdata/erosolow/m83/data/m83.mom1.fits',
-                cubename = '/mnt/bigdata/erosolow/m83/data/m83.co10.K_correct.fits',
+def ism_veldisp(momentname = '/mnt/bigdata/erosolow/erosolo/m83/data/m83.mom1.fits',
+                cubename = '/mnt/bigdata/erosolow/erosolo/m83/data/m83.co10.K_correct.fits',
                 dr = 0.25, nbins=100):
     sc = SpectralCube.read(cubename)
-    _, dec, ra = scworld[0,:,:]
+    _, dec, ra = sc.world[0,:,:]
     mom1 = fits.getdata(momentname)
 #    mom1 = nd.generic_filter(mom1,np.nanmedian,size=1)
     wcs_mom1 = wcs.WCS(momentname)
@@ -163,7 +163,7 @@ def ism_veldisp(momentname = '/mnt/bigdata/erosolow/m83/data/m83.mom1.fits',
         sigma[ctr] = (np.sum(accumspec[roi]*(vaxis[roi]-v0)**2)/np.sum(accumspec[roi]))**0.5
     return sigma
 
-def things_vrot(momentname = '/mnt/bigdata/erosolow/m83/data/m83.mom1.fits',
+def things_vrot(momentname = '/mnt/bigdata/erosolow/erosolo/m83/data/m83.mom1.fits',
                 dr = 0.25,nbins=100):
     m83 = Galaxy('M83')
     mom1 = fits.getdata(momentname).squeeze()
@@ -189,7 +189,7 @@ def things_vrot(momentname = '/mnt/bigdata/erosolow/m83/data/m83.mom1.fits',
         radprof[ctr] = np.nanmean(r[idx])
     return radprof,vprof,vscatter
 
-def things_profile(momentname = '/mnt/bigdata/erosolow/m83/data/NGC_5236_RO_MOM0:I:HI:wbb2008.fits',
+def things_profile(momentname = '/mnt/bigdata/erosolow/erosolo/m83/data/NGC_5236_RO_MOM0:I:HI:wbb2008.fits',
                    dr=0.5,nbins=100):
     m83 = Galaxy('M83')
     mom0 = fits.getdata(momentname).squeeze()
@@ -227,8 +227,8 @@ def alma_profile(momentname = 'm83.moment0.fits',
     sdprof *= np.cos(m83.inclination)*4.35
     return radprof, sdprof
 
-def alma_moment0(maskname = '/mnt/bigdata/erosolow/m83/data/m83.co10.K_mask.fits',
-                 cubename = '/mnt/bigdata/erosolow/m83/data/m83.co10.K_correct.fits'):
+def alma_moment0(maskname = '/mnt/bigdata/erosolow/erosolo/m83/data/m83.co10.K_mask.fits',
+                 cubename = '/mnt/bigdata/erosolow/erosolo/m83/data/m83.co10.K_correct.fits'):
 
     # cube = fits.getdata(cubename)
     # header = fits.getheader(cubename)
@@ -260,7 +260,7 @@ def alma_mask():
     emap = fits.getdata('m83.errormap.fits')
     sm_emap = nd.median_filter(emap,footprint=morph.disk(17))
 
-def alma_errormap(cube = '/mnt/bigdata/erosolow/m83/data/m83.co10.K_correct.fits'):
+def alma_errormap(cube = '/mnt/bigdata/erosolow/erosolo/m83/data/m83.co10.K_correct.fits'):
     s = SpectralCube.read(cube)
     m83 = Galaxy('M83')
     _,dec,ra = s.world[0,:,:]
