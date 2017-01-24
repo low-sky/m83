@@ -52,29 +52,43 @@ def lundgren_vrot(radius):
 def mass_scales():
     t = Table.read('m83.profiles.fits')
     # Vel. dispersions in quadrature
-    sigmav = ((t['sigma_v_hi']**2 + t['sigma_v_h2']**2)**0.5).data *\
-        (u.km / u.s)
+    molsd = lundgren_surfdens(t['Radius'].data * u.kpc).value * u.M_sun / u.pc**2
+#    molsd = t['Surfdens_H2'].data * u.M_sun / u.pc**2
+    sigmav = ((t['Surfdens_HI'].data * t['sigma_v_hi']**2 +\
+               molsd.value * t['sigma_v_h2']**2) /\
+              (molsd.value + t['Surfdens_HI']))**0.5
+    sigmav = sigmav.data * u.km/u.s
     # Vel dispersions = max
     #    sigmav = np.max(np.c_[t[sigma_v_hi],t[sigma_v_h2]],axis=1)
 
     # Single dish surface densities
     surfdens = (t['Surfdens_HI']).data * (u.M_sun / u.pc**2) +\
-        lundgren_surfdens(t['Radius'].data * u.kpc)
+               molsd
 
     # ALMA Surface densities
     #surfdens = (t['Surfdens_HI']).data * (u.M_sun / u.pc**2) +\
     #    (t['Surfdens_H2']).data * (u.M_sun / u.pc**2)
 
     M_J = (np.pi * sigmav**4 / (4 * con.G**2 * surfdens)).to(u.M_sun)
+
     kappasq = lundgren_epicyclic(t['Radius'].data * u.kpc)
+
+    V = t['Vrot'].data * u.km / u.s
+    R = t['Radius'].data * u.kpc
+    lnR = np.log(R.value)
+    lnomR = np.log((V[1:] * R[1:] + V[0:-1] * R[0:-1]).value/2)
+    kappasq = 2 * (V / R)**2 * np.append(np.gradient(lnomR,
+                                                     lnR[1:]-lnR[0:-1]),1e-3)
+    import pdb; pdb.set_trace()
     M_T = (4 * np.pi**5 * con.G**2 * surfdens**3 / kappasq**2).to(u.M_sun)
-    edges = np.array([0, 450, 2300, 3200, 3900, 4500])
+    edges = np.array([0, 450, 2300, 3200, 3900, 4500, 6000])
+    r = t['Radius'].data
     for ins, outs in zip(edges[0:-1], edges[1:]):
         idx = (t['Radius'] >= ins / 1e3) * (t['Radius'] < outs / 1e3)
         print '{0}-{1}: Jeans = {2}, Toomre = {3}'.format(
             ins, outs,
-            np.mean(M_J[idx]) / 1e6,
-            np.mean(M_T[idx]) / 1e6)
+            np.mean(M_J[idx] * r[idx]) / np.mean(r[idx]) / 1e6,
+            np.mean(M_T[idx] * r[idx]) / np.mean(r[idx]) / 1e6)
 
     return(M_J, M_T)
 
