@@ -166,13 +166,18 @@ def ism_veldisp(momentname = '/mnt/bigdata/erosolow/erosolo/m83/data/m83.mom1.fi
         accumspec = np.zeros(sc.shape[0])
         for deltachan,yspec,xspec in zip(dchan,ymat[idx],xmat[idx]):
             if np.isfinite(deltachan):
-                accumspec += channelShift(sc[:,yspec,xspec],deltachan)
+                thisspec = channelShift(sc[:,yspec,xspec],deltachan)
+                idx = np.isfinite(thisspec)
+                accumspec[idx] = accumspec[idx] + thisspec[idx]
 
         labels,_ = nd.measurements.label(accumspec>0)
         pk = np.argmax(accumspec)
         roi = (labels == labels[pk])
         v0 = np.sum(accumspec[roi]*vaxis[roi])/np.sum(accumspec[roi])
         sigma[ctr] = (np.sum(accumspec[roi]*(vaxis[roi]-v0)**2)/np.sum(accumspec[roi]))**0.5
+        print ctr
+        if np.isnan(sigma[ctr]):
+            import pdb; pdb.set_trace()
     return sigma
 
 def things_vrot(momentname = '/mnt/bigdata/erosolow/erosolo/m83/data/m83.mom1.fits',
