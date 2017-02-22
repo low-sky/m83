@@ -52,8 +52,9 @@ def lundgren_vrot(radius):
 def mass_scales():
     t = Table.read('m83.profiles.fits')
     # Vel. dispersions in quadrature
-    molsd = lundgren_surfdens(t['Radius'].data * u.kpc).value * u.M_sun / u.pc**2
-#    molsd = t['Surfdens_H2'].data * u.M_sun / u.pc**2
+    molsd = lundgren_surfdens(t['Radius'].data * u.kpc).value * \
+            u.M_sun / u.pc**2
+    molsd = t['Surfdens_H2'].data * u.M_sun / u.pc**2
     sigmav = ((t['Surfdens_HI'].data * t['sigma_v_hi']**2 +\
                molsd.value * t['sigma_v_h2']**2) /\
               (molsd.value + t['Surfdens_HI']))**0.5
@@ -79,7 +80,7 @@ def mass_scales():
     lnomR = np.log((V[1:] * R[1:] + V[0:-1] * R[0:-1]).value/2)
     kappasq = 2 * (V / R)**2 * np.append(np.gradient(lnomR,
                                                      lnR[1:]-lnR[0:-1]),1e-3)
-    import pdb; pdb.set_trace()
+
     M_T = (4 * np.pi**5 * con.G**2 * surfdens**3 / kappasq**2).to(u.M_sun)
     edges = np.array([0, 450, 2300, 3200, 3900, 4500, 6000])
     r = t['Radius'].data
@@ -87,8 +88,10 @@ def mass_scales():
         idx = (t['Radius'] >= ins / 1e3) * (t['Radius'] < outs / 1e3)
         print '{0}-{1}: Jeans = {2}, Toomre = {3}'.format(
             ins, outs,
-            np.mean(M_J[idx] * r[idx]) / np.mean(r[idx]) / 1e6,
-            np.mean(M_T[idx] * r[idx]) / np.mean(r[idx]) / 1e6)
+            np.mean(M_J[idx] * r[idx] * surfdens[idx]) /\
+            np.mean(surfdens[idx] * r[idx]) / 1e6,
+            np.mean(M_T[idx] * r[idx] * surfdens[idx]) /\
+            np.mean(surfdens[idx] * r[idx]) / 1e6)
 
     return(M_J, M_T)
 

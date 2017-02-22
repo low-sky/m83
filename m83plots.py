@@ -12,8 +12,17 @@ import matplotlib.pyplot as plt
 from galaxies import Galaxy
 import astropy.units as u
 import matplotlib as mpl
-mpl.rcParams['font.family']='serif'
-mpl.rcParams['font.serif'] = 'Times New Roman'
+import sys
+
+if sys.platform == 'darwin':
+    mpl.rcParams['font.family'] = 'serif'
+    mpl.rcParams['font.serif'] = 'Times New Roman'
+
+elif sys.platform == 'linux2':
+    mpl.rcParams['font.family'] = 'serif'
+    mpl.rcParams['font.serif'] = 'FreeSerif'
+
+mpl.rcParams['font.size'] = 12
 mygalaxy=Galaxy("M83")
 
 #load the file
@@ -46,6 +55,9 @@ plt.scatter(mytable2['MASS_GCORR'],mytable2['VIRMASS_GCORR_DECONV'],
 test_mass = np.logspace(5,9,100)
 #plt.plot(test_mass,np.exp(m*np.log(test_mass)+b)) #fit line for m83
 plt.plot(test_mass,test_mass,alpha=0.5,linewidth=2) #fitted x=y
+plt.fill_between([1e5,3.35e5],1e5,5e7, color='gray',alpha=0.5)
+virlim = 1040 * 2.57**2 * 20 *4 
+plt.fill_between([1e5,5e7],1e5,virlim, color='gray',alpha=0.5)
 plt.text(0.05,0.95,'(a)',transform=ax.transAxes,va='top')
 plt.xlabel(r'$M_{\mathrm{lum}}\ (M_{\odot})$')
 plt.ylabel(r'$M_{\mathrm{vir}}\ (M_{\odot})$')
@@ -64,6 +76,7 @@ plt.scatter(mytable['RADRMS_GCORR_DECONV'],mytable['VRMS_GCORR_DECONV'],
 plt.scatter(mytable2['RADRMS_GCORR_DECONV'],mytable2['VRMS_GCORR_DECONV'],
             c=mytable2['RADIUS_KPC'], marker='D',cmap='Greys',vmin=0,vmax=5,s=8)
 
+
 test_radius=np.logspace(0,3,100)
 #plt.plot(test_radius, np.exp(n*np.log(test_radius)+c)) #fit line for m83
 plt.plot(test_radius, ((np.pi**0.5/3.4)**0.5)*(test_radius**0.5)) #fit line from Solomon et al.- using effective radius
@@ -71,6 +84,8 @@ plt.text(0.05,0.95,'(b)',transform=ax.transAxes,va='top')
 plt.xlabel(r'$R\ (\mathrm{pc})$')
 plt.ylabel(r'${\sigma_v}\  (\mathrm{km}\ \mathrm{s}^{-1})$')
 plt.axis([10,2e2, 1, 3*10e0])
+plt.fill_between([10,20],1e5,5e7,color='gray',alpha=0.5)
+plt.fill_between([10,200],1e5,3.3e5,color='gray',alpha=0.5)
 plt.colorbar(label='$R_{\mathrm{gal}}\ (\mathrm{kpc})$')
 plt.xscale('log')
 plt.yscale('log')
@@ -91,6 +106,8 @@ plt.text(0.05,0.95,'(c)',transform=ax.transAxes,va='top')
 plt.ylabel(r'$M_{\mathrm{lum}}\ (M_{\odot})$')
 plt.xlabel(r'$R\ (\mathrm{pc})$')
 plt.axis([10, 2e2, 10e4, 5e7])
+plt.fill_between([10,20],1e0,30,color='gray',alpha=0.5)
+plt.fill_between([10,200],1e5,3.35,color='gray',alpha=0.5)
 #plt.colorbar(label='$R_{gal}\ (pc)$')
 plt.xscale('log')
 plt.yscale('log')
