@@ -12,10 +12,16 @@ import astropy.units as u
 import matplotlib as mpl
 import plfit_mcstat as plf
 import scipy.stats as ss
+import scipy.special as specials
+from radial_profile import lundgren_surfdens
+from scipy.optimize import minimize
 mpl.rcParams['font.family']='serif'
 mpl.rcParams['font.serif'] = 'Times New Roman'
 mpl.rcParams['font.size']=12
 
+
+def gammainvmetric(pvec, params):
+    return np.abs(params[1] - plf.gammaincplus2(params[0], pvec))
 
 #get info about m83
 mygalaxy = Galaxy("M83")
@@ -69,7 +75,8 @@ t = Table(names=['Rmin', 'Rmax', 'R_tpl', 'p_tpl', 'index',
                  'index15_trunc', 'index85_trunc',
                  'Mtrun15_trunc', 'Mtrun85_trunc',
                  'pkprob_purepl', 'pkprob_sch',
-                 'pkprob_trunc', 'pkprob_bound'])
+                 'pkprob_trunc', 'pkprob_bound', 
+                 'sd_totalmass', 'catalog_mass'])
 
 fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(8.5, 5.0))
 # fig.subplots_adjust(wspace=0.3, bottom=0.2, right=0.85)
@@ -80,14 +87,17 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
         (tin['RGAL_PC'] > ins)
     tt = tin[subset]
     mass = np.sort(tt['MASS_GCORR'].data)
+    catmass = np.sum(mass)
     minmass = np.max([minmass_global])
     mass = mass[mass > minmass_global]
+
 #    fit = powerlaw.Fit(mass, xmin=minmass, discrete=True)
 #    fit=powerlaw.Fit(mass, discrete=True)
 #    R1, p1 = fit.distribution_compare('power_law', 'truncated_power_law')
 #    R2, p2 = fit.distribution_compare('power_law', 'schechter')
 #    R3, p3 = fit.distribution_compare('schechter', 'truncated_power_law')
     t.add_row()
+    t[-1]['catalog_mass']=catmass
     t[-1]['Ncloud'] = np.sum(subset)
     t[-1]['Ncloudfit'] = len(mass)
     t[-1]['Rmin'] = ins
@@ -98,7 +108,7 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
     except IndexError:
         t[-1]['M5'] = np.nan
     t[-1]['Mean5'] = np.exp(np.mean(np.log(mass[-5:-1])))
-
+    
     for type in ['sch', 'purepl', 'trunc']:
         print type
         optresult = plf.plfit_ksstat(mass / minmass, type=type, method='ad')
@@ -121,7 +131,6 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
         t[-1]['pkprob_' + type] = plf.logprob_plfit(optresult.x,
                                                     mass / minmass,
                                                     type=type, method='ad')
-#    import pdb; pdb.set_trace()
 
 #    t[-1]['index_tpl'] = fit.truncated_power_law.parameter1
 #    t[-1]['Mtrunc_tpl'] = 1 / fit.truncated_power_law.parameter2
@@ -159,7 +168,7 @@ for ins, outs, ax, ctr in zip(edge_in, edge_out, axes.flatten(), bin):
     ccdf_empirical = 1 - plf.empirical_cdf(mass / minmass, completeness=True)
     ax.loglog(mass, ccdf_empirical,
               drawstyle='steps', color='blue')
-
+    
 #    fit.truncated_power_law.plot_ccdf(ax=ax, label='Trunc. Power Law')
 #    fit.power_law.plot_ccdf(ax=ax, label='Power Law', linestyle='--')
 #    fit.plot_ccdf(ax=ax, drawstyle='steps', label='Data')

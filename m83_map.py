@@ -3,6 +3,10 @@ from astropy.table import Table
 from galaxies import Galaxy
 import matplotlib.pyplot as mpl
 import aplpy
+import numpy as np
+from radial_profile import lundgren_surfdens
+import astropy.units as u
+
 mpl.rcParams['font.family'] = 'serif'
 mpl.rcParams['font.serif'] = 'Times New Roman'
 
@@ -38,3 +42,14 @@ map.show_contour(radii, levels=[0.2, 0.4, 0.9, 2.2, 5.6],
 t = Table.read('m83.co10.K_props_clfind.fits')
 map.show_markers(t['XPOS'], t['YPOS'],edgecolors=['yellow']*len(t),facecolors=['black']*len(t),s=4)
 map.save('m83_tmax.pdf')
+
+rgalpc = (rgal * 1e3).value
+surfdens = lundgren_surfdens(rgalpc * u.pc)
+apix = ((hdr['CDELT2'] * mygalaxy.distance * np.pi / 180)**2 / 
+        np.cos(mygalaxy.inclination))
+mass = surfdens * apix * np.isfinite(hdu[0].data)
+edge_in = np.array([0, 450, 2300, 3200, 3900, 4500])
+edge_out = np.array([450, 2300, 3200, 3900, 4500, 10000])
+
+for ins, outs in zip(edge_in, edge_out):
+    print ins, outs, np.sum(mass[(rgalpc >= ins)*(rgalpc < outs)])/1e8
