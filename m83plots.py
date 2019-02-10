@@ -25,6 +25,8 @@ elif sys.platform == 'linux2':
 mpl.rcParams['font.size'] = 12
 mygalaxy=Galaxy("M83")
 
+
+# edit in some new code.
 #load the file
 mytable=Table.read('m83.co10.K_props_clfind.fits')
 #note that matplotlib understands LaTeX math in the code m
